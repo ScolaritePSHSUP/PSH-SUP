@@ -123,6 +123,13 @@
         >
       </div>
 
+<p class="contact-warning">
+📎 Pour toute <strong>absence</strong>, <strong>retard</strong> ou
+<strong>bourse</strong>, un justificatif est obligatoire.<br>
+Les demandes sans pièce jointe ne seront pas traitées.
+</p>
+
+
       <button type="submit" class="btn-primary">
         📤 Envoyer
       </button>
@@ -137,26 +144,9 @@
 </footer>
 
 
-<!-- EmailJS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-
 <script>
-/* ===============================
-   🔑 INITIALISATION EMAILJS
-=============================== */
-(function () {
-  emailjs.init("fHAZLsSL7znp1LTfF"); // 👈 TA PUBLIC KEY
-})();
-
-/* ===============================
-   📩 FORMULAIRE CONTACT
-=============================== */
-document.getElementById("contactForm").addEventListener("submit", function (e) {
+document.getElementById("contactForm").addEventListener("submit", (e) => {
   e.preventDefault();
-
-  const msgBox = document.getElementById("contactMessage");
-  msgBox.textContent = "";
-  msgBox.style.color = "";
 
   const nom = document.getElementById("nom").value.trim();
   const prenom = document.getElementById("prenom").value.trim();
@@ -165,43 +155,73 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   const campus = document.getElementById("campus").value;
   const objet = document.getElementById("objet").value;
   const message = document.getElementById("message").value.trim();
+  const justificatif = document.getElementById("justificatif").files[0];
 
   /* ===============================
-     ✅ VALIDATION
+     ✅ VALIDATIONS DE BASE
   =============================== */
   if (!nom || !prenom || !classe || !email || !campus || !objet || message.length < 5) {
-    msgBox.textContent = "❌ Merci de remplir tous les champs.";
-    msgBox.style.color = "#b23a2c";
+    alert("❌ Merci de remplir tous les champs.");
     return;
   }
 
   /* ===============================
-     📧 ENVOI EMAIL EMAILJS
+     📎 PJ OBLIGATOIRE SELON OBJET
   =============================== */
-  emailjs.send(
-    "scolaritepshsup",       // ex: service_pshsup
-    "template_contact_pshsup",      // ex: template_contact_pshsup
-    {
-      nom: nom,
-      prenom: prenom,
-      classe: classe,
-      email: email,
-      campus: campus,
-      objet: objet,
-      message: message
-    }
-  ).then(
-    function () {
-      msgBox.textContent = "✅ Message envoyé avec succès.";
-      msgBox.style.color = "green";
-      document.getElementById("contactForm").reset();
-    },
-    function (error) {
-      console.error("❌ EmailJS error :", error);
-      msgBox.textContent = "❌ Erreur lors de l’envoi du message.";
-      msgBox.style.color = "#b23a2c";
-    }
-  );
+  const objetsAvecPJ = ["Absence", "Retard", "Bourse"];
+
+  if (objetsAvecPJ.includes(objet) && !justificatif) {
+    alert(
+      "❌ Un justificatif est OBLIGATOIRE pour :\n" +
+      "- une absence\n" +
+      "- un retard\n" +
+      "- une notification de bourse\n\n" +
+      "Merci de joindre un fichier avant l’envoi."
+    );
+    return;
+  }
+
+  /* ===============================
+     📧 CONSTRUCTION DU MAIL
+  =============================== */
+  const subject = `[PSH SUP] ${objet.toUpperCase()} – ${prenom} ${nom} – ${classe}`;
+
+  const body = `
+⚠️ IMPORTANT – LECTURE OBLIGATOIRE
+
+Ce message doit être envoyé UNIQUEMENT depuis votre adresse
+prenom.nom@passy-st-honore.com
+
+Tout message envoyé depuis une autre adresse ne sera pas traité.
+
+--------------------------------------------------
+
+Nom : ${nom}
+Prénom : ${prenom}
+Classe : ${classe}
+Campus : ${campus}
+Email saisi : ${email}
+
+Objet : ${objet}
+
+--------------------------------------------------
+
+MESSAGE :
+${message}
+
+--------------------------------------------------
+
+📎 RAPPEL IMPORTANT :
+Merci de JOINDRE votre justificatif AVANT d’envoyer ce mail.
+Les demandes sans pièce jointe ne seront pas traitées.
+`;
+
+  const mailto =
+    "mailto:scolaritepshsup@passy-st-honore.com" +
+    "?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+
+  window.location.href = mailto;
 });
 </script>
 
