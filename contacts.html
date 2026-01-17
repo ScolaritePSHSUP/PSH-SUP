@@ -43,67 +43,65 @@
 <main class="page">
   <div class="card contact-card">
 
-    <h2>✉️ Contacter la scolarité</h2>
+  <h2>✉️ Contacter la scolarité</h2>
 
-<form id="contactForm" class="contact-form">
+  <form id="contactForm" class="contact-form">
 
-  <div class="form-row">
-    <div class="form-group">
-      <label>Nom</label>
-      <input type="text" id="nom" required>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" id="nom" required>
+      </div>
+
+      <div class="form-group">
+        <label>Prénom</label>
+        <input type="text" id="prenom" required>
+      </div>
     </div>
 
     <div class="form-group">
-      <label>Prénom</label>
-      <input type="text" id="prenom" required>
+      <label>Classe</label>
+      <input type="text" id="classe" required>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label>Classe</label>
-    <input type="text" id="classe" required>
-  </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" required>
+    </div>
 
-  <div class="form-group">
-    <label>Email</label>
-    <input type="email" id="email" required>
-  </div>
+    <div class="form-group">
+      <label>Objet</label>
+      <select id="objet" required>
+        <option value="">Choisir</option>
+        <option value="Absence">Justifier une absence</option>
+        <option value="Retard">Justifier un retard</option>
+        <option value="Bourse">Notification conditionnelle de bourse</option>
+        <option value="Autre">Autre demande</option>
+      </select>
+    </div>
 
-  <div class="form-group">
-    <label>Objet</label>
-    <select id="objet" required>
-      <option value="">Choisir</option>
-      <option value="Absence">Absence</option>
-      <option value="Retard">Retard</option>
-      <option value="Bourse">Bourse</option>
-      <option value="Autre">Autre</option>
-    </select>
-  </div>
+    <p id="justificatifWarning" class="contact-warning" style="display:none;">
+      📎 Pour toute <strong>absence</strong>, <strong>retard</strong> ou
+      <strong>bourse</strong>, un justificatif est obligatoire.
+    </p>
 
-  <!-- ⚠️ Message conditionnel -->
-  <p id="justificatifWarning" class="contact-warning" style="display:none;">
-    📎 Pour toute <strong>absence</strong>, <strong>retard</strong> ou
-    <strong>bourse</strong>, un justificatif est obligatoire.
-  </p>
+    <div class="form-group" id="justificatifGroup" style="display:none;">
+      <label>Justificatif</label>
+      <input type="file" id="justificatif" accept=".pdf,.jpg,.jpeg,.png">
+    </div>
 
-  <div class="form-group" id="justificatifGroup" style="display:none;">
-    <label>Justificatif (PDF / JPG / PNG)</label>
-    <input type="file" id="justificatif" accept=".pdf,.jpg,.jpeg,.png">
-  </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="message" rows="4" required></textarea>
+    </div>
 
-  <div class="form-group">
-    <label>Message</label>
-    <textarea id="message" rows="4" required></textarea>
-  </div>
+    <button type="submit" class="btn-primary">
+      📤 Envoyer le message
+    </button>
 
-  <button type="submit" class="btn-primary">
-    📤 Envoyer
-  </button>
+  </form>
+</div>
 
-</form>
-
-
-  </div>
 </main>
 
 <footer class="footer">
