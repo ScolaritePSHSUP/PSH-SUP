@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
+
+  <title>Admin – Réservations de salles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<header class="header">
+  <h1>Admin – Réservations</h1>
+  <p>Gestion des réservations de salles</p>
+</header>
+
+<center>
+  <a href="admin-dashboard.html" class="btn-secondary">
+    ⬅ Retour dashboard
+  </a>
+</center>
+
+<main class="admin-grid">
+
+  <!-- FORMULAIRE -->
+  <form id="reservationForm" class="admin-form">
+
+    <label>Salle</label>
+    <select id="salle_id" required></select>
+
+    <label>Date</label>
+    <input type="date" id="date" required>
+
+    <label>Heure de début</label>
+    <input type="time" id="heure_debut" required>
+
+    <label>Heure de fin</label>
+    <input type="time" id="heure_fin" required>
+
+    <label>Nom & prénom</label>
+    <input type="text" id="nom_prenom" required>
+
+    <label>Email</label>
+    <input type="email" id="email">
+
+    <label>Motif</label>
+    <textarea id="motif" rows="3"></textarea>
+
+    <label>Statut</label>
+    <select id="statut">
+      <option value="en_attente">En attente</option>
+      <option value="validee">Validée</option>
+      <option value="refusee">Refusée</option>
+    </select>
+
+    <button type="submit" class="btn-primary">
+      🗓️ Ajouter réservation
+    </button>
+  </form>
+
+  <button id="cancelEdit" class="btn-secondary" style="display:none;">
+    ❌ Annuler modification
+  </button>
+
+  <!-- LISTE -->
+  <section class="admin-list">
+    <h2>Réservations existantes</h2>
+    <div id="adminReservationsList"></div>
+  </section>
+
+</main>
+
+<button id="logout" class="btn-logout-floating">🚪</button>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  }
+);
+
+/* ===============================
+   🔒 PROTECTION ADMIN
+=============================== */
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    window.location.href = "admin-login.html";
+  }
+})();
+
+/* ===============================
+   🧠 ÉTAT
+=============================== */
+let editingReservationId = null;
+
+/* ===============================
+   🏫 LOAD SALLES
+=============================== */
+async function loadSalles() {
+  const { data } = await supabaseClient
+    .from("salles")
+    .select("id, numero")
+    .order("numero");
+
+  const select = document.getElementById("salle_id");
+  select.innerHTML = "";
+
+  data.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.numero;
+    select.appendChild(opt);
+  });
+}
+loadSalles();
+
+/* ===============================
+   ➕ SUBMIT
+=============================== */
+reservationForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    salle_id: salle_id.value,
+    date_debut: `${date.value}T${heure_debut.value}:00+01:00`,
+    date_fin: `${date.value}T${heure_fin.value}:00+01:00`,
+    nom_prenom: nom_prenom.value.trim(),
+    email: email.value.trim() || null,
+    motif: motif.value.trim() || null,
+    statut: statut.value
+  };
+
+  const query = editingReservationId
+    ? supabaseClient.from("reservations")
+        .update(payload)
+        .eq("id", editingReservationId)
+    : supabaseClient.from("reservations").insert(payload);
+
+  const { error } = await query;
+
+  if (error) {
+    console.error(error);
+    alert("Erreur enregistrement réservation");
+    return;
+  }
+
+  reservationForm.reset();
+  editingReservationId = null;
+  cancelEdit.style.display = "none";
+  document.querySelector(".btn-primary").textContent = "🗓️ Ajouter réservation";
+
+  loadReservations();
+});
+
+/* ===============================
+   📋 LOAD RESERVATIONS
+=============================== */
+async function loadReservations() {
+  const { data } = await supabaseClient
+    .from("reservations")
+    .select(`
+      id,
+      nom_prenom,
+      date_debut,
+      date_fin,
+      statut,
+      salles ( numero )
+    `)
+    .order("date_debut", { ascending: false });
+
+  const container = document.getElementById("adminReservationsList");
+  container.innerHTML = "";
+
+  data.forEach(r => {
+    container.innerHTML += `
+      <div class="admin-actu-card">
+        <h3>${r.nom_prenom}</h3>
+        <small>
+          Salle ${r.salles.numero}<br>
+          ${new Date(r.date_debut).toLocaleString("fr-FR")}
+          →
+          ${new Date(r.date_fin).toLocaleString("fr-FR")}<br>
+          Statut : ${r.statut}
+        </small>
+        <div class="admin-actions">
+          <button onclick="editReservation('${r.id}')">✏️</button>
+          <button onclick="deleteReservation('${r.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+}
+loadReservations();
+
+/* ===============================
+   ✏️ EDIT
+=============================== */
+window.editReservation = async (id) => {
+  const { data } = await supabaseClient
+    .from("reservations")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  salle_id.value = data.salle_id;
+  date.value = data.date_debut.split("T")[0];
+  heure_debut.value = data.date_debut.split("T")[1].slice(0,5);
+  heure_fin.value = data.date_fin.split("T")[1].slice(0,5);
+  nom_prenom.value = data.nom_prenom;
+  email.value = data.email || "";
+  motif.value = data.motif || "";
+  statut.value = data.statut;
+
+  editingReservationId = id;
+  cancelEdit.style.display = "block";
+  document.querySelector(".btn-primary").textContent = "💾 Mettre à jour";
+};
+
+/* ===============================
+   🗑️ DELETE
+=============================== */
+window.deleteReservation = async (id) => {
+  if (!confirm("Supprimer cette réservation ?")) return;
+
+  await supabaseClient
+    .from("reservations")
+    .delete()
+    .eq("id", id);
+
+  loadReservations();
+};
+
+/* ===============================
+   ❌ CANCEL
+=============================== */
+cancelEdit.onclick = () => {
+  reservationForm.reset();
+  editingReservationId = null;
+  cancelEdit.style.display = "none";
+  document.querySelector(".btn-primary").textContent = "🗓️ Ajouter réservation";
+};
+
+/* ===============================
+   🚪 LOGOUT
+=============================== */
+logout.onclick = async () => {
+  await supabaseClient.auth.signOut();
+  window.location.href = "admin-login.html";
+};
+</script>
+
+</body>
+</html>
+

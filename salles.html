@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- Titre -->
+  <title>PSH SUP – Vie du campus</title>
+
+  <!-- Viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- PWA – Mobile -->
+  <meta name="theme-color" content="#b23a2c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Icônes -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1>Salles</h1>
+  <p>Disponibilités et informations des salles</p>
+</header>
+
+<!-- CONTENU -->
+<main class="page">
+  <div id="sallesContainer" class="grid">
+    <!-- Salles injectées ici -->
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  © PSH SUP – Vie du campus – 2026
+</footer>
+
+<!-- NAVIGATION BASSE -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <span>🏠</span><small>Accueil</small>
+  </a>
+  <a href="actualites.html" class="nav-item">
+    <span>📰</span><small>Actus</small>
+  </a>
+  <a href="evenements.html" class="nav-item">
+    <span>📅</span><small>Events</small>
+  </a>
+  <a href="salles.html" class="nav-item active">
+    <span>🏫</span><small>Salles</small>
+  </a>
+  <a href="contact-admin.html" class="nav-item">
+    <span>🏢</span><small>Admin</small>
+  </a>
+</nav>
+
+<!-- BOUTONS FLOTTANTS -->
+<button id="btnReservation" class="btn-floating btn-reservation" aria-label="Réserver une salle">🗓️</button>
+<button id="btnContact" class="btn-floating btn-contact" aria-label="Contacter l'administration">✉️</button>
+<button id="btnBDE" class="btn-floating btn-bde" aria-label="Votre BDE">🎉</button>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+/* ===============================
+   🔒 AUTH GUARD
+=============================== */
+supabaseClient.auth.getSession().then(({ data }) => {
+  if (!data.session) {
+    window.location.href = "login.html";
+  }
+});
+/* ===============================
+   🏫 CHARGER LES SALLES
+=============================== */
+async function loadSalles() {
+  const { data, error } = await supabaseClient
+    .from('salles')
+    .select('numero, campus, capacite, description')
+    .order('numero', { ascending: true });
+
+  if (error) {
+    console.error('Erreur salles :', error);
+    return;
+  }
+
+  const container = document.getElementById('sallesContainer');
+  container.innerHTML = '';
+
+  if (data.length === 0) {
+    container.innerHTML = `
+      <p style="grid-column:1/-1;text-align:center;color:#6b7280;">
+        Aucune salle enregistrée
+      </p>`;
+    return;
+  }
+
+  data.forEach(salle => {
+    container.innerHTML += `
+      <div class="card">
+        <span>🏫</span>
+        <h2>Salle ${salle.numero}</h2>
+        <p style="font-size:0.85rem;color:#6b7280;">
+          📍 ${salle.campus}<br>
+          👥 Capacité : ${salle.capacite}
+        </p>
+
+        ${salle.description ? `
+          <p style="margin-top:0.6rem;font-size:0.8rem;">
+            ${salle.description}
+          </p>
+        ` : ''}
+      </div>
+    `;
+  });
+}
+
+
+/* ===============================
+   🚀 INIT
+=============================== */
+loadSalles();
+
+/* ===============================
+   📋 BOUTONS FLOTTANTS
+=============================== */
+document.getElementById("btnReservation").onclick = () =>
+  window.location.href = "reservations.html";
+
+document.getElementById("btnContact").onclick = () =>
+  window.location.href = "contacts.html";
+  
+ document.getElementById("btnBDE").addEventListener("click", () => {
+  window.location.href = "https://bde-psh-sup.netlify.app/";
+});
+</script>
+
+</body>
+</html>

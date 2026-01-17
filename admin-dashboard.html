@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+
+  <title>Admin – Dashboard PSH SUP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" sizes="192x192" href="/icons/icon-192.png">
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<header class="header">
+  <h1>Administration PSH SUP</h1>
+  <p>Tableau de bord de gestion</p>
+</header>
+
+<main class="page">
+
+  <div class="grid">
+
+    <a href="admin-actus.html" class="card">
+      <span>📰</span>
+      <h2>Actualités</h2>
+      <p>Créer & gérer les actus</p>
+    </a>
+
+    <a href="admin-evenements.html" class="card">
+      <span>📅</span>
+      <h2>Événements</h2>
+      <p>Agenda & temps forts</p>
+    </a>
+
+    <a href="admin-salles.html" class="card">
+      <span>🏫</span>
+      <h2>Salles</h2>
+      <p>Gestion des salles</p>
+    </a>
+
+    <a href="admin-reservations.html" class="card">
+      <span>🗓️</span>
+      <h2>Réservations</h2>
+      <p>Planning & validations</p>
+    </a>
+
+    <a href="admin-contact-admin.html" class="card">
+      <span>🏢</span>
+      <h2>Administration</h2>
+      <p>Contacts internes</p>
+    </a>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  © PSH SUP – Administration – 2026
+</footer>
+
+<!-- LOGOUT -->
+<button id="logout" class="btn-logout-floating">🚪</button>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  }
+);
+
+/* ===============================
+   🔒 PROTECTION ADMIN
+=============================== */
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    window.location.href = "admin-login.html";
+  }
+})();
+
+/* ===============================
+   🚪 LOGOUT
+=============================== */
+document.getElementById("logout").addEventListener("click", async () => {
+  await supabaseClient.auth.signOut();
+  window.location.href = "admin-login.html";
+});
+</script>
+
+</body>
+</html>
