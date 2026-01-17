@@ -116,12 +116,7 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
-/* 🔒 REDIRECTION SI NON CONNECTÉ */
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (!data.session) {
-    window.location.href = "login.html";
-  }
-});
+
 
 /* ===============================
    📋 BOUTONS FLOTTANTS
