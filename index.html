@@ -64,6 +64,17 @@
     </a>
 
   </div>
+  
+<button id="installBtn" class="btn-primary install-btn" hidden>
+  📲 Installer l’application
+</button>
+
+<p class="ios-install-hint">
+  📱 Sur iPhone :  
+  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
+</p>
+
+
 </main>
 
 <!-- FOOTER -->
@@ -177,6 +188,30 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/PSH-SUP/sw.js");
   });
 }
+
+/* ===============================
+   📲 INSTALL PWA
+=============================== */
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Affiche le bouton uniquement si installable
+  installBtn.hidden = false;
+
+  installBtn.addEventListener("click", async () => {
+    installBtn.hidden = true;
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("Installation:", outcome);
+
+    deferredPrompt = null;
+  });
+});
 </script>
 
 </body>
