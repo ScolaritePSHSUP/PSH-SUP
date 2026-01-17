@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- Titre -->
   <title>PSH SUP – Vie du campus</title>
 
-  <!-- Viewport -->
+  <!-- Responsive -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- PWA – Mobile -->
+  <!-- PWA -->
   <meta name="theme-color" content="#b23a2c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,17 +16,20 @@
   <meta name="apple-mobile-web-app-title" content="PSH SUP">
 
   <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/PSH-SUP/manifest.json">
 
-  <!-- Icônes -->
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
-  
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="/PSH-SUP/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/PSH-SUP/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/PSH-SUP/icons/icon-512.png">
+
+  <!-- iOS Splash fix -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
   <!-- Styles -->
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 
 <body>
 
@@ -142,6 +144,39 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ===============================
+   📲 INSTALL PWA
+=============================== */
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Bouton visible seulement si install possible
+  const installBtn = document.createElement("button");
+  installBtn.textContent = "📲 Installer l’application";
+  installBtn.className = "btn-primary";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "80px";
+  installBtn.style.left = "50%";
+  installBtn.style.transform = "translateX(-50%)";
+  installBtn.style.zIndex = "999";
+
+  document.body.appendChild(installBtn);
+
+  installBtn.addEventListener("click", async () => {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.remove();
+  });
+});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/PSH-SUP/sw.js");
+  });
+}
 </script>
 
 </body>

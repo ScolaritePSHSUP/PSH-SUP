@@ -2,18 +2,32 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Connexion – PSH SUP</title>
+
+  <title>PSH SUP – Vie du campus</title>
+
+  <!-- Responsive -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#b23a2c">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PSH SUP">
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Manifest -->
+  <link rel="manifest" href="/PSH-SUP/manifest.json">
 
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="/PSH-SUP/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/PSH-SUP/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/PSH-SUP/icons/icon-512.png">
+
+  <!-- iOS Splash fix -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
