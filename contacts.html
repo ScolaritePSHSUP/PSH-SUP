@@ -29,6 +29,8 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  
 </head>
 
 <body>
@@ -134,18 +136,20 @@
   © PSH SUP – Vie du campus – 2026
 </footer>
 
+
+<!-- EmailJS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 /* ===============================
-   📧 EMAILJS INIT
+   🔑 INITIALISATION EMAILJS
 =============================== */
 (function () {
-  emailjs.init("fHAZLsSL7znp1LTfF"); // ← remplace ici
+  emailjs.init("fHAZLsSL7znp1LTfF"); // 👈 TA PUBLIC KEY
 })();
 
 /* ===============================
-   📩 ENVOI FORMULAIRE CONTACT
+   📩 FORMULAIRE CONTACT
 =============================== */
 document.getElementById("contactForm").addEventListener("submit", function (e) {
   e.preventDefault();
@@ -154,53 +158,53 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   msgBox.textContent = "";
   msgBox.style.color = "";
 
-  const data = {
-    nom: document.getElementById("nom").value.trim(),
-    prenom: document.getElementById("prenom").value.trim(),
-    classe: document.getElementById("classe").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    campus: document.getElementById("campus").value,
-    objet: document.getElementById("objet").value,
-    message: document.getElementById("message").value.trim(),
-    justificatif_url: "" // optionnel pour l’instant
-  };
+  const nom = document.getElementById("nom").value.trim();
+  const prenom = document.getElementById("prenom").value.trim();
+  const classe = document.getElementById("classe").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const campus = document.getElementById("campus").value;
+  const objet = document.getElementById("objet").value;
+  const message = document.getElementById("message").value.trim();
 
-  /* ✅ VALIDATION */
-  if (
-    !data.nom ||
-    !data.prenom ||
-    !data.classe ||
-    !data.email ||
-    !data.campus ||
-    !data.objet ||
-    data.message.length < 5
-  ) {
-    msgBox.textContent = "❌ Merci de remplir tous les champs obligatoires.";
+  /* ===============================
+     ✅ VALIDATION
+  =============================== */
+  if (!nom || !prenom || !classe || !email || !campus || !objet || message.length < 5) {
+    msgBox.textContent = "❌ Merci de remplir tous les champs.";
     msgBox.style.color = "#b23a2c";
     return;
   }
 
-  msgBox.textContent = "⏳ Envoi du message...";
-  msgBox.style.color = "#6b7280";
-
-  emailjs
-    .send(
-      "scolaritepshsup",   // ← remplace ici
-      "template_contact_pshsup",  // ← remplace ici
-      data
-    )
-    .then(() => {
+  /* ===============================
+     📧 ENVOI EMAIL EMAILJS
+  =============================== */
+  emailjs.send(
+    "scolaritepshsup",       // ex: service_pshsup
+    "template_contact_pshsup",      // ex: template_contact_pshsup
+    {
+      nom: nom,
+      prenom: prenom,
+      classe: classe,
+      email: email,
+      campus: campus,
+      objet: objet,
+      message: message
+    }
+  ).then(
+    function () {
       msgBox.textContent = "✅ Message envoyé avec succès.";
       msgBox.style.color = "green";
-      e.target.reset();
-    })
-    .catch((error) => {
-      console.error("EMAILJS ERROR:", error);
+      document.getElementById("contactForm").reset();
+    },
+    function (error) {
+      console.error("❌ EmailJS error :", error);
       msgBox.textContent = "❌ Erreur lors de l’envoi du message.";
       msgBox.style.color = "#b23a2c";
-    });
+    }
+  );
 });
 </script>
+
 
 
 </body>
