@@ -154,41 +154,7 @@ if ('serviceWorker' in navigator) {
 }
 
 /* ===============================
-   📲 INSTALL PWA
-=============================== */
-let deferredPrompt;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  // Bouton visible seulement si install possible
-  const installBtn = document.createElement("button");
-  installBtn.textContent = "📲 Installer l’application";
-  installBtn.className = "btn-primary";
-  installBtn.style.position = "fixed";
-  installBtn.style.bottom = "80px";
-  installBtn.style.left = "50%";
-  installBtn.style.transform = "translateX(-50%)";
-  installBtn.style.zIndex = "999";
-
-  document.body.appendChild(installBtn);
-
-  installBtn.addEventListener("click", async () => {
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.remove();
-  });
-});
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/PSH-SUP/sw.js");
-  });
-}
-
-/* ===============================
-   📲 INSTALL PWA
+   📲 INSTALL PWA (FINAL)
 =============================== */
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
@@ -197,7 +163,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
 
-  // Affiche le bouton uniquement si installable
+  // Affiche le bouton
   installBtn.hidden = false;
 
   installBtn.addEventListener("click", async () => {
@@ -205,14 +171,17 @@ window.addEventListener("beforeinstallprompt", (e) => {
     deferredPrompt.prompt();
 
     const { outcome } = await deferredPrompt.userChoice;
-    console.log("Installation:", outcome);
+    console.log("Installation :", outcome);
 
     deferredPrompt = null;
   });
 });
+
 </script>
+
 <button id="installBtn" class="btn-primary install-btn" hidden>
   📲 Installer l’application
 </button>
+
 </body>
 </html>
