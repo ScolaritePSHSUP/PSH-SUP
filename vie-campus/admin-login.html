@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+
+  <title>PSH SUP – Connexion Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP Admin">
+
+  <!-- Manifest & icons -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="../style.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1>Connexion Admin</h1>
+  <p>Accès réservé BDE & Administration</p>
+</header>
+
+<!-- CONTENU -->
+<main class="login-wrapper">
+
+  <div class="login-card">
+
+    <div class="login-icon">🔐</div>
+
+    <h2>Administration</h2>
+    <p>Merci de vous identifier</p>
+
+    <form id="adminLoginForm">
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Adresse email"
+        required
+      >
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Mot de passe"
+        required
+      >
+
+      <button type="submit">
+        Se connecter
+      </button>
+
+    </form>
+
+    <p id="loginError" class="form-message"></p>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  © PSH SUP – Administration – 2026
+</footer>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+/* ===============================
+   🔑 LOGIN ADMIN
+=============================== */
+const form = document.getElementById("adminLoginForm");
+const errorBox = document.getElementById("loginError");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorBox.textContent = "";
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    errorBox.textContent = "❌ Identifiants incorrects";
+    errorBox.style.color = "#b23a2c";
+    return;
+  }
+
+  // ✅ Connexion réussie
+  window.location.href = "admin-dashboard.html";
+});
+</script>
+
+</body>
+</html>
