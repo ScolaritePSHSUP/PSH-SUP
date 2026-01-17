@@ -143,13 +143,9 @@ document.getElementById("btnBDE").addEventListener("click", () => {
 /* ===============================
    🔧 SERVICE WORKER
 =============================== */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register('/sw.js');
-    } catch (e) {
-      console.warn("Service worker non chargé");
-    }
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/PSH-SUP/sw.js");
   });
 }
 
