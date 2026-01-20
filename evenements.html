@@ -134,8 +134,8 @@ async function loadEvents() {
   const { data, error } = await supabaseClient
     .from("evenements")
     .select("*")
-    .eq("published", true)
-    .order("event_date", { ascending: false });
+    .eq("publie", true)
+    .order("date_debut", { ascending: false });
 
   if (error) {
     console.error("Erreur événements :", error);
@@ -153,31 +153,28 @@ async function loadEvents() {
     return;
   }
 
-  /* 👉 À venir d'abord, puis passés */
-  const upcoming = data.filter(ev => ev.event_date >= today);
-  const past = data.filter(ev => ev.event_date < today);
+  const upcoming = data.filter(ev => ev.date_debut >= today);
+  const past = data.filter(ev => ev.date_debut < today);
   const events = [...upcoming, ...past];
 
   events.forEach(ev => {
-    const isPast = ev.event_date < today;
+    const isPast = ev.date_debut < today;
 
     container.innerHTML += `
       <article class="event-card ${isPast ? "past" : ""}">
         ${ev.image_url ? `
-          <img
-            src="${ev.image_url}"
-            class="event-image clickable-image"
-            loading="lazy"
-          >
+          <img src="${ev.image_url}" class="event-image clickable-image">
         ` : ""}
 
         <div class="event-body">
-          <h2>${escapeHtml(ev.title)}</h2>
+          <h2>${escapeHtml(ev.titre)}</h2>
 
           <p class="event-meta">
-            📅 ${formatDate(ev.event_date)}
-            ${ev.event_time ? " • 🕒 " + escapeHtml(ev.event_time) : ""}
-            <br>📍 ${escapeHtml(ev.location || "")}
+            📅 ${formatDate(ev.date_debut)}
+            ${ev.date_fin && ev.date_fin !== ev.date_debut
+              ? " → " + formatDate(ev.date_fin)
+              : ""}
+            <br>📍 ${escapeHtml(ev.campus || "")}
           </p>
 
           <p>${escapeHtml(ev.description || "")}</p>
@@ -190,6 +187,7 @@ async function loadEvents() {
     `;
   });
 }
+
 
 /* ===============================
    🖼️ LIGHTBOX
