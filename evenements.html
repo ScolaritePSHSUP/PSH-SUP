@@ -132,10 +132,11 @@ async function loadEvents() {
   const today = new Date().toISOString().split("T")[0];
 
   const { data, error } = await supabaseClient
-    .from("evenements")
-    .select("*")
-    .eq("publie", true)
-    .order("date_debut", { ascending: false });
+  .from("evenements")
+  .select("*")
+  .eq("publie", true)
+  .order("date_debut", { ascending: false });
+
 
   if (error) {
     console.error("Erreur événements :", error);
