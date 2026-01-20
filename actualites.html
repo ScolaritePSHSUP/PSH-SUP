@@ -128,7 +128,7 @@ async function loadActus() {
   const { data, error } = await supabaseClient
     .from('actualites')
     .select('*')
-    .eq('published', true)
+    .eq('publie', true) // ✅ BON NOM
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -139,10 +139,11 @@ async function loadActus() {
   const container = document.getElementById('actusContainer');
   container.innerHTML = '';
 
-  if (data.length === 0) {
-    container.innerHTML = `<p style="text-align:center;color:#6b7280;">
-      Aucune actualité pour le moment
-    </p>`;
+  if (!data || data.length === 0) {
+    container.innerHTML = `
+      <p style="text-align:center;color:#6b7280;">
+        Aucune actualité pour le moment
+      </p>`;
     return;
   }
 
@@ -158,15 +159,10 @@ async function loadActus() {
           </span>
         </div>
 
-        ${actu.image_url ? `
-          <img src="${actu.image_url}" class="actus-image clickable-image">
-        ` : ''}
-
-        <h2>${escapeHtml(actu.title)}</h2>
-        <p class="actus-resume">${escapeHtml(actu.summary)}</p>
+        <h2>${escapeHtml(actu.titre)}</h2>
 
         <div class="actus-content">
-          <p>${escapeHtml(actu.content)}</p>
+          <p>${escapeHtml(actu.contenu)}</p>
         </div>
 
         <button class="cta toggle-actu">Lire plus</button>
@@ -176,6 +172,7 @@ async function loadActus() {
 
   setupToggle();
 }
+
 
 /* ===============================
    📖 TOGGLE
