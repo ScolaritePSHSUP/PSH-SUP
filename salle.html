@@ -213,7 +213,20 @@ function renderPlanning(contraintes, reservations) {
         }
       });
 
-      grid.innerHTML += `<div class="planning-cell ${classe}"></div>`;
+      grid.innerHTML += `
+  <div 
+    class="planning-cell ${classe}"
+    data-jour="${j.id}"
+    data-heure="${h}"
+    title="${getTooltipText(classe)}"
+  ></div>
+`;
+function getTooltipText(classe) {
+  if (classe === "disponible") return "Disponible – cliquer pour réserver";
+  if (classe === "reserve") return "Déjà réservé";
+  return "Indisponible (cours / fermé)";
+}
+
     });
   });
 }
@@ -260,6 +273,44 @@ document
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
+
+
+document.addEventListener("click", e => {
+  const cell = e.target.closest(".planning-cell");
+  if (!cell) return;
+
+  /* ⛔ Bloqué si non disponible */
+  if (!cell.classList.contains("disponible")) {
+    alert("⛔ Cette salle n'est pas disponible à ce créneau.");
+    return;
+  }
+
+  const jourSemaine = parseInt(cell.dataset.jour);
+  const heureDebut = cell.dataset.heure;
+
+  /* Calcul date réelle (semaine en cours) */
+  const today = new Date();
+  const diff = jourSemaine - (today.getDay() || 7);
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + diff);
+
+  const dateISO = targetDate.toISOString().split("T")[0];
+
+  /* Heure fin = +30 min */
+  const [h, m] = heureDebut.split(":").map(Number);
+  const heureFin = `${String(h + (m === 30 ? 1 : 0)).padStart(2, "0")}:${m === 30 ? "00" : "30"}`;
+
+  /* Pré-remplissage */
+  document.getElementById("jour").value = dateISO;
+  document.getElementById("heureDebut").value = heureDebut;
+  document.getElementById("heureFin").value = heureFin;
+
+  /* Scroll fluide vers formulaire */
+  document
+    .getElementById("reservationForm")
+    .scrollIntoView({ behavior: "smooth" });
+});
+
 </script>
 
 

@@ -911,3 +911,29 @@ body {
 .legend-color.reserve {
   background: #fecaca; /* rouge clair */
 }
+.planning-cell {
+  position: relative;
+  cursor: pointer;
+}
+
+.planning-cell::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.planning-cell:hover::after {
+  opacity: 1;
+}
