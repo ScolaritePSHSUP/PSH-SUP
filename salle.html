@@ -31,12 +31,10 @@
   </section>
 
   <!-- PLANNING -->
-  <section class="card">
-    <h2>📅 Planning de la salle</h2>
-    <div id="planningContainer">
-      <p style="color:#6b7280;">Chargement du planning…</p>
-    </div>
-  </section>
+ <section class="card">
+  <h2>📅 Planning de la salle</h2>
+  <div id="planningGrid" class="planning-grid"></div>
+</section>
 
   <!-- RÉSERVATION -->
   <section class="card">
@@ -87,7 +85,7 @@ const supabaseClient = supabase.createClient(
 );
 
 /* ===============================
-   📌 RÉCUP SALLE DANS URL
+   📌 SALLE DEPUIS L’URL
 =============================== */
 const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
@@ -109,13 +107,14 @@ async function loadSalleInfos() {
     .eq("numero", salleNumero)
     .single();
 
+  const container = document.getElementById("salleInfos");
+
   if (error || !data) {
-    document.getElementById("salleInfos").innerHTML =
-      "<p style='color:red;'>Salle introuvable</p>";
+    container.innerHTML = "<p style='color:red;'>Salle introuvable</p>";
     return;
   }
 
-  document.getElementById("salleInfos").innerHTML = `
+  container.innerHTML = `
     <p>
       📍 Campus : <strong>${data.campus}</strong><br>
       👥 Capacité : <strong>${data.capacite}</strong>
@@ -125,74 +124,123 @@ async function loadSalleInfos() {
 }
 
 /* ===============================
-   📅 PLANNING SALLE
+   📅 PLANNING VISUEL
 =============================== */
-async function loadPlanning() {
-  const { data } = await supabaseClient
+
+const jours = [
+  { id: 1, label: "Lun" },
+  { id: 2, label: "Mar" },
+  { id: 3, label: "Mer" },
+  { id: 4, label: "Jeu" },
+  { id: 5, label: "Ven" }
+];
+
+const heures = [];
+for (let h = 8; h < 20; h++) {
+  heures.push(`${String(h).padStart(2, "0")}:00`);
+  heures.push(`${String(h).padStart(2, "0")}:30`);
+}
+
+async function loadPlanningVisuel() {
+  const { data: contraintes } = await supabaseClient
+    .from("salles_contraintes")
+    .select("*")
+    .eq("salle_numero", salleNumero);
+
+  const { data: reservations } = await supabaseClient
     .from("reservations_salles")
     .select("*")
-    .eq("salle_numero", salleNumero)
-    .order("jour", { ascending: true })
-    .order("heure_debut", { ascending: true });
+    .eq("salle_numero", salleNumero);
 
-  const container = document.getElementById("planningContainer");
-  container.innerHTML = "";
+  renderPlanning(contraintes || [], reservations || []);
+}
 
-  if (!data || data.length === 0) {
-    container.innerHTML =
-      "<p style='color:#6b7280;'>Aucune réservation pour cette salle</p>";
-    return;
-  }
+function renderPlanning(contraintes, reservations) {
+  const grid = document.getElementById("planningGrid");
+  grid.innerHTML = "";
 
-  data.forEach(r => {
-    container.innerHTML += `
-      <p>
-        📅 ${r.jour} — ⏰ ${r.heure_debut} → ${r.heure_fin}<br>
-        👤 ${r.nom}
-      </p>
-    `;
+  /* En-tête */
+  grid.innerHTML += `<div></div>`;
+  jours.forEach(j => {
+    grid.innerHTML += `<div class="planning-header">${j.label}</div>`;
+  });
+
+  heures.forEach(h => {
+    grid.innerHTML += `<div class="planning-hour">${h}</div>`;
+
+    jours.forEach(j => {
+      let classe = "disponible";
+
+      /* Contraintes fixes */
+      contraintes.forEach(c => {
+        if (
+          c.jour_semaine === j.id &&
+          h >= c.heure_debut.slice(0, 5) &&
+          h < c.heure_fin.slice(0, 5)
+        ) {
+          classe = "ferme";
+        }
+      });
+
+      /* Réservations */
+      reservations.forEach(r => {
+        const jour = new Date(r.jour).getDay() || 7; // dimanche=7
+        if (
+          jour === j.id &&
+          h >= r.heure_debut.slice(0, 5) &&
+          h < r.heure_fin.slice(0, 5)
+        ) {
+          classe = "reserve";
+        }
+      });
+
+      grid.innerHTML += `<div class="planning-cell ${classe}"></div>`;
+    });
   });
 }
 
 /* ===============================
    ✍️ RÉSERVATION
 =============================== */
-document.getElementById("reservationForm").addEventListener("submit", async e => {
-  e.preventDefault();
+document
+  .getElementById("reservationForm")
+  .addEventListener("submit", async e => {
+    e.preventDefault();
 
-  const { error } = await supabaseClient
-    .from("reservations_salles")
-    .insert({
-      salle_numero: salleNumero,
-      nom: nom.value,
-      classe: classe.value,
-      jour: jour.value,
-      heure_debut: heureDebut.value,
-      heure_fin: heureFin.value,
-      email: email.value,
-      motif: motif.value
-    });
+    const { error } = await supabaseClient
+      .from("reservations_salles")
+      .insert({
+        salle_numero: salleNumero,
+        nom: nom.value,
+        classe: classe.value,
+        jour: jour.value,
+        heure_debut: heureDebut.value,
+        heure_fin: heureFin.value,
+        email: email.value,
+        motif: motif.value
+      });
 
-  const msg = document.getElementById("reservationMessage");
+    const msg = document.getElementById("reservationMessage");
 
-  if (error) {
-    msg.textContent = "❌ Erreur lors de la réservation";
-    msg.style.color = "red";
-    return;
-  }
+    if (error) {
+      msg.textContent = "❌ Erreur lors de la réservation";
+      msg.style.color = "red";
+      return;
+    }
 
-  msg.textContent = "✅ Demande envoyée";
-  msg.style.color = "green";
-  e.target.reset();
-  loadPlanning();
-});
+    msg.textContent = "✅ Demande envoyée";
+    msg.style.color = "green";
+    e.target.reset();
+    loadPlanningVisuel();
+  });
 
 /* ===============================
    🚀 INIT
 =============================== */
 loadSalleInfos();
-loadPlanning();
+loadPlanningVisuel();
 </script>
+
 
 </body>
 </html>

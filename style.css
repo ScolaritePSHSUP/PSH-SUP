@@ -829,3 +829,47 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* =========================
+   PLANNING SALLE
+========================= */
+
+.planning-grid {
+  display: grid;
+  grid-template-columns: 60px repeat(5, 1fr);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.75rem;
+}
+
+.planning-header {
+  background: #f3f4f6;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--accent);
+}
+
+.planning-hour {
+  padding: 0.3rem;
+  text-align: right;
+  background: #fafafa;
+  border-right: 1px solid var(--accent);
+}
+
+.planning-cell {
+  border: 1px solid #eee;
+  height: 22px;
+}
+
+.planning-cell.ferme {
+  background: #e5e7eb;
+}
+
+.planning-cell.disponible {
+  background: #d1fae5;
+}
+
+.planning-cell.reserve {
+  background: #bfdbfe;
+}
