@@ -83,23 +83,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ===============================
-   📌 Détection mobile
-=============================== */
-
-const isMobile = window.innerWidth < 768;
-
-if (isMobile) {
-  currentView = "day";
-  selectedDay = new Date().getDay() || 7;
-}
-
-document.getElementById("viewWeek").onclick = () => {
-  if (isMobile) return;
-  currentView = "week";
-  renderPlanning(lastContraintes, lastReservations);
-};
-
 
 /* ===============================
    📌 SALLE DEPUIS URL
@@ -122,6 +105,17 @@ let selectedDay = new Date().getDay() || 7;
 
 let lastContraintes = [];
 let lastReservations = [];
+
+/* ===============================
+   📌 Détection mobile
+=============================== */
+
+const isMobile = window.innerWidth < 768;
+
+if (isMobile) {
+  currentView = "day";
+  selectedDay = new Date().getDay() || 7;
+}
 
 /* ===============================
    📅 CONSTANTES

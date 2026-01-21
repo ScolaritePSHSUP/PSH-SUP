@@ -1045,3 +1045,37 @@ body.day-view .planning-header:not(.day-active),
 body.day-view .planning-cell:not(.day-active) {
   display: none;
 }
+/* 📱 MOBILE */
+@media (max-width: 768px) {
+
+  .planning-grid {
+    grid-template-columns: 60px 1fr !important;
+  }
+
+  .planning-header:not(.day-active),
+  .planning-cell:not(.day-active) {
+    display: none;
+  }
+
+  .planning-hour {
+    font-size: 0.75rem;
+    text-align: right;
+    padding-right: 6px;
+  }
+
+  .planning-cell {
+    min-height: 38px;
+  }
+
+  .planning-toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+/* 📱 MOBILE : désactiver vue semaine */
+@media (max-width: 768px) {
+  #viewWeek {
+    display: none;
+  }
+}
