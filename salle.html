@@ -169,7 +169,7 @@ function renderPlanning(contraintes, reservations) {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
-      let classe = "disponible";
+      let classe = "disponible"; // par défaut
 
       /* Contraintes fixes */
       contraintes.forEach(c => {
@@ -178,13 +178,15 @@ function renderPlanning(contraintes, reservations) {
           h >= c.heure_debut.slice(0, 5) &&
           h < c.heure_fin.slice(0, 5)
         ) {
-          classe = "ferme";
+          if (c.type === "cours") classe = "cours";
+          if (c.type === "ferme") classe = "ferme";
+          if (c.type === "ouvert") classe = "disponible";
         }
       });
 
       /* Réservations */
       reservations.forEach(r => {
-        const jour = new Date(r.jour).getDay() || 7; // dimanche=7
+        const jour = new Date(r.jour).getDay() || 7;
         if (
           jour === j.id &&
           h >= r.heure_debut.slice(0, 5) &&
@@ -198,6 +200,7 @@ function renderPlanning(contraintes, reservations) {
     });
   });
 }
+
 
 /* ===============================
    ✍️ RÉSERVATION
