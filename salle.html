@@ -104,48 +104,8 @@ const supabaseClient = supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
-const reservationForm = document.getElementById("reservationForm");
-
-reservationForm.addEventListener("submit", async (e) => {
-  e.preventDefault(); // ⛔ empêche le reload (CRUCIAL)
-
-  if (!salleNumero) {
-    alert("Salle introuvable");
-    return;
-  }
-
-  const reservation = {
-    salle_numero: salleNumero, // ⚠️ TEXTE, PAS NOMBRE
-    nom: document.getElementById("nom").value,
-    classe: document.getElementById("classe").value,
-    jour: document.getElementById("jour").value,
-    heure_debut: document.getElementById("heureDebut").value,
-    heure_fin: document.getElementById("heureFin").value,
-    email: document.getElementById("email").value,
-    motif: document.getElementById("motif").value,
-    status: "pending"
-  };
-
-  const { error } = await supabaseClient
-    .from("reservations_salles")
-    .insert([reservation]);
-
-  const msg = document.getElementById("reservationMessage");
-
-  if (error) {
-    console.error(error);
-    msg.textContent = "❌ Erreur lors de l’envoi";
-    msg.style.color = "red";
-    return;
-  }
-
-  msg.textContent = "✅ Demande envoyée (en attente de validation)";
-  msg.style.color = "green";
-  reservationForm.reset();
-});
-
 /* ===============================
-   📌 SALLE DEPUIS URL (SÉCURISÉ)
+   📌 SALLE DEPUIS URL (TOUJOURS EN PREMIER)
 =============================== */
 const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
@@ -154,7 +114,6 @@ if (!salleNumero || salleNumero === "null") {
   alert("Salle introuvable – lien incorrect");
   window.location.href = "salles.html";
 }
-
 
 document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
 
@@ -193,8 +152,6 @@ for (let h = 8; h < 20; h++) {
    🏫 INFOS SALLE
 =============================== */
 async function loadSalleInfos() {
-  if (!salleNumero) return;
-
   const { data, error } = await supabaseClient
     .from("salles")
     .select("*")
@@ -218,8 +175,6 @@ async function loadSalleInfos() {
    📅 LOAD PLANNING
 =============================== */
 async function loadPlanningVisuel() {
-  if (!salleNumero) return;
-
   const { data: contraintes } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
@@ -257,17 +212,12 @@ function renderPlanning(contraintes, reservations) {
 
   document.body.classList.toggle("day-view", currentView === "day");
 
-  /* En-tête */
   grid.innerHTML += `<div></div>`;
   jours.forEach(j => {
     const active = currentView === "day" && j.id === selectedDay;
-    grid.innerHTML += `
-      <div class="planning-header ${active ? "day-active" : ""}">
-        ${j.label}
-      </div>`;
+    grid.innerHTML += `<div class="planning-header ${active ? "day-active" : ""}">${j.label}</div>`;
   });
 
-  /* Grille */
   heures.forEach(h => {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
@@ -278,12 +228,11 @@ function renderPlanning(contraintes, reservations) {
       let isFerme = false;
       let isOuvert = false;
 
-      /* Contraintes */
       contraintes.forEach(c => {
         if (
           c.jour_semaine === j.id &&
-          h >= c.heure_debut.slice(0, 5) &&
-          h < c.heure_fin.slice(0, 5)
+          h >= c.heure_debut.slice(0,5) &&
+          h < c.heure_fin.slice(0,5)
         ) {
           if (c.type === "ferme" || c.type === "cours") isFerme = true;
           if (c.type === "ouvert") isOuvert = true;
@@ -293,14 +242,12 @@ function renderPlanning(contraintes, reservations) {
       if (isOuvert) classe = "disponible";
       else if (isFerme) classe = "ferme";
 
-      /* Réservations */
       reservations.forEach(r => {
         const jour = new Date(r.jour).getDay() || 7;
-
         if (
           jour === j.id &&
-          h >= r.heure_debut.slice(0, 5) &&
-          h < r.heure_fin.slice(0, 5)
+          h >= r.heure_debut.slice(0,5) &&
+          h < r.heure_fin.slice(0,5)
         ) {
           if (r.status === "approved") {
             classe = "reserve";
@@ -343,12 +290,49 @@ function activateCellClicks() {
       const date = new Date(today);
       date.setDate(today.getDate() + diff);
 
-      document.getElementById("jour").value =
-        date.toISOString().split("T")[0];
+      document.getElementById("jour").value = date.toISOString().split("T")[0];
       document.getElementById("heureDebut").value = heure;
     };
   });
 }
+
+/* ===============================
+   📝 FORMULAIRE RÉSERVATION
+=============================== */
+const reservationForm = document.getElementById("reservationForm");
+
+reservationForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const reservation = {
+    salle_numero: salleNumero,
+    nom: document.getElementById("nom").value,
+    classe: document.getElementById("classe").value,
+    jour: document.getElementById("jour").value,
+    heure_debut: document.getElementById("heureDebut").value,
+    heure_fin: document.getElementById("heureFin").value,
+    email: document.getElementById("email").value,
+    motif: document.getElementById("motif").value,
+    status: "pending"
+  };
+
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert([reservation]);
+
+  const msg = document.getElementById("reservationMessage");
+
+  if (error) {
+    console.error(error);
+    msg.textContent = "❌ Erreur lors de l’envoi";
+    msg.style.color = "red";
+    return;
+  }
+
+  msg.textContent = "✅ Demande envoyée (en attente de validation)";
+  msg.style.color = "green";
+  reservationForm.reset();
+});
 
 /* ===============================
    🗓️ BOUTONS DE VUE
@@ -379,8 +363,7 @@ btnDay.onclick = () => {
 };
 
 picker.onchange = e => {
-  const d = new Date(e.target.value);
-  selectedDay = d.getDay() || 7;
+  selectedDay = new Date(e.target.value).getDay() || 7;
   renderPlanning(lastContraintes, lastReservations);
 };
 
@@ -397,6 +380,7 @@ if (isMobile) {
   picker.valueAsDate = new Date();
 }
 </script>
+
 
 
 </body>
