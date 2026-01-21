@@ -226,15 +226,25 @@ function renderPlanning() {
 
       // réservations
       lastReservations.forEach(r => {
-        const jr = new Date(r.jour).getDay() || 7;
-        if (
-          jr === j.id &&
-          h >= r.heure_debut.slice(0,5) &&
-          h < r.heure_fin.slice(0,5)
-        ) {
-          classe = r.status === "approved" ? "reserve" : "pending";
-        }
-      });
+
+  // ❌ ON IGNORE LES REFUSÉES
+  if (r.status === "refused") return;
+
+  const jr = new Date(r.jour).getDay() || 7;
+
+  if (
+    jr === j.id &&
+    h >= r.heure_debut.slice(0, 5) &&
+    h < r.heure_fin.slice(0, 5)
+  ) {
+    if (r.status === "approved") {
+      classe = "reserve";
+    } else if (r.status === "pending") {
+      classe = "pending";
+    }
+  }
+});
+
 
       const active = currentView === "day" && j.id === selectedDay;
 
@@ -307,7 +317,7 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   });
 
   if (bloque) {
-    msg.textContent = "⛔ Créneau indisponible";
+    msg.textContent = "⛔ Ce créneau n’est pas disponible";
     msg.style.color = "red";
     return;
   }
@@ -318,7 +328,7 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     classe: classe.value,
     jour,
     heure_debut: heureDebut,
-    heure_fin: heureFin.value,
+    heure_fin: heureFin,
     email: email.value,
     motif: motif.value,
     status: "pending"
@@ -334,9 +344,10 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  msg.textContent = "✅ Demande envoyée";
+  msg.textContent = "✅ Demande envoyée (en attente de validation)";
   msg.style.color = "green";
   e.target.reset();
+
 });
 
 /* ===============================
