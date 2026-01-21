@@ -4,46 +4,35 @@
   <meta charset="UTF-8">
   <title>PSH SUP – Salle</title>
 
-  <!-- Responsive -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <h1 id="salleTitle">Salle</h1>
   <p id="salleSubtitle">Planning et réservation</p>
 </header>
 
-<!-- CONTENU -->
 <main class="page">
 
-  <!-- INFOS SALLE -->
   <section class="card" id="salleInfos">
     <p style="color:#6b7280;">Chargement des informations…</p>
   </section>
 
   <!-- VUE PLANNING -->
-<div class="planning-toolbar">
-  <button id="viewWeek" class="btn-secondary active">📅 Semaine</button>
-  <button id="viewDay" class="btn-secondary">📆 Jour</button>
+  <div class="planning-toolbar">
+    <button id="viewWeek" class="btn-secondary active">📅 Semaine</button>
+    <button id="viewDay" class="btn-secondary">📆 Jour</button>
+    <input type="date" id="dayPicker" style="display:none;">
+  </div>
 
-  <input type="date" id="dayPicker" style="display:none;">
-</div>
-
-
-  <!-- PLANNING -->
   <section class="card">
     <h2>📅 Planning de la salle</h2>
 
-    <!-- LÉGENDE -->
     <div class="planning-legend">
       <span><span class="legend disponible"></span> Disponible</span>
       <span><span class="legend ferme"></span> Cours / fermé</span>
@@ -54,12 +43,10 @@
     <div id="planningGrid" class="planning-grid"></div>
   </section>
 
-  <!-- RÉSERVATION -->
   <section class="card">
     <h2>✍️ Réserver cette salle</h2>
 
     <form id="reservationForm" class="contact-form">
-
       <input type="text" id="nom" placeholder="Nom & Prénom" required>
       <input type="text" id="classe" placeholder="Classe" required>
 
@@ -72,16 +59,9 @@
 
       <input type="email" id="email" placeholder="Adresse mail" required>
 
-      <textarea
-        id="motif"
-        placeholder="Motif de la réservation"
-        required
-      ></textarea>
+      <textarea id="motif" placeholder="Motif de la réservation" required></textarea>
 
-      <button type="submit" class="btn-primary">
-        📩 Envoyer la demande
-      </button>
-
+      <button type="submit" class="btn-primary">📩 Envoyer la demande</button>
     </form>
 
     <p id="reservationMessage" class="form-message"></p>
@@ -89,21 +69,19 @@
 
 </main>
 
-<!-- FOOTER -->
 <footer class="footer">
   © PSH SUP – Vie du campus – 2026
 </footer>
 
+<!-- ✅ TON JS DOIT ÊTRE DANS UN SCRIPT -->
+<script>
 /* ===============================
    🔐 SUPABASE CONFIG
 =============================== */
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===============================
    📌 SALLE DEPUIS URL
@@ -148,13 +126,20 @@ for (let h = 8; h < 20; h++) {
    🏫 INFOS SALLE
 =============================== */
 async function loadSalleInfos() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("salles")
     .select("*")
     .eq("numero", salleNumero)
     .single();
 
-  document.getElementById("salleInfos").innerHTML = `
+  const box = document.getElementById("salleInfos");
+
+  if (error || !data) {
+    box.innerHTML = "<p style='color:red;'>Salle introuvable</p>";
+    return;
+  }
+
+  box.innerHTML = `
     📍 Campus : <strong>${data.campus}</strong><br>
     👥 Capacité : <strong>${data.capacite}</strong>
   `;
@@ -201,18 +186,12 @@ function renderPlanning(contraintes, reservations) {
 
   document.body.classList.toggle("day-view", currentView === "day");
 
-  /* EN-TÊTE */
   grid.innerHTML += `<div></div>`;
   jours.forEach(j => {
     const active = currentView === "day" && j.id === selectedDay;
-    grid.innerHTML += `
-      <div class="planning-header ${active ? "day-active" : ""}">
-        ${j.label}
-      </div>
-    `;
+    grid.innerHTML += `<div class="planning-header ${active ? "day-active" : ""}">${j.label}</div>`;
   });
 
-  /* GRILLE */
   heures.forEach(h => {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
@@ -223,7 +202,6 @@ function renderPlanning(contraintes, reservations) {
       let isFerme = false;
       let isOuvert = false;
 
-      /* CONTRAINTES */
       contraintes.forEach(c => {
         if (
           c.jour_semaine === j.id &&
@@ -238,7 +216,6 @@ function renderPlanning(contraintes, reservations) {
       if (isOuvert) classe = "disponible";
       else if (isFerme) classe = "ferme";
 
-      /* RÉSERVATIONS */
       reservations.forEach(r => {
         const jour = new Date(r.jour).getDay() || 7;
         if (
@@ -260,12 +237,10 @@ function renderPlanning(contraintes, reservations) {
       const active = currentView === "day" && j.id === selectedDay;
 
       grid.innerHTML += `
-        <div
-          class="planning-cell ${classe} ${active ? "day-active" : ""}"
-          data-jour="${j.id}"
-          data-heure="${h}"
-          title="${reservationInfo || getTooltipText(classe)}"
-        >
+        <div class="planning-cell ${classe} ${active ? "day-active" : ""}"
+             data-jour="${j.id}"
+             data-heure="${h}"
+             title="${reservationInfo || getTooltipText(classe)}">
           ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
         </div>
       `;
@@ -289,27 +264,41 @@ function activateCellClicks() {
       const date = new Date(today);
       date.setDate(today.getDate() + diff);
 
-      document.getElementById("jour").value =
-        date.toISOString().split("T")[0];
+      document.getElementById("jour").value = date.toISOString().split("T")[0];
       document.getElementById("heureDebut").value = heure;
     };
   });
 }
 
 /* ===============================
-   🗓️ BOUTONS VUE
+   🗓️ BOUTONS VUE (IDS HTML)
 =============================== */
-document.getElementById("btnWeek").onclick = () => {
+const btnWeek = document.getElementById("viewWeek");
+const btnDay  = document.getElementById("viewDay");
+const picker  = document.getElementById("dayPicker");
+
+btnWeek.onclick = () => {
   currentView = "week";
+  picker.style.display = "none";
+  btnWeek.classList.add("active");
+  btnDay.classList.remove("active");
   renderPlanning(lastContraintes, lastReservations);
 };
 
-document.getElementById("btnDay").onclick = () => {
+btnDay.onclick = () => {
   currentView = "day";
+  picker.style.display = "inline-block";
+  btnDay.classList.add("active");
+  btnWeek.classList.remove("active");
+
+  // si vide, on met aujourd'hui
+  if (!picker.value) picker.valueAsDate = new Date();
+  selectedDay = (new Date(picker.value).getDay() || 7);
+
   renderPlanning(lastContraintes, lastReservations);
 };
 
-document.getElementById("dayPicker").onchange = e => {
+picker.onchange = e => {
   const d = new Date(e.target.value);
   selectedDay = d.getDay() || 7;
   currentView = "day";
@@ -321,9 +310,7 @@ document.getElementById("dayPicker").onchange = e => {
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
-
-
-
+</script>
 
 </body>
 </html>
