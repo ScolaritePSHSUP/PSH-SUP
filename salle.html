@@ -217,6 +217,7 @@ function renderPlanning(contraintes, reservations) {
 
   document.body.classList.toggle("day-view", currentView === "day");
 
+  /* En-tête */
   grid.innerHTML += `<div></div>`;
   jours.forEach(j => {
     const active = currentView === "day" && j.id === selectedDay;
@@ -233,32 +234,57 @@ function renderPlanning(contraintes, reservations) {
       let isFerme = false;
       let isOuvert = false;
 
+      /* 🔑 Date réelle correspondant à la colonne */
+      const dateAffichee = (() => {
+        const today = new Date();
+        const diff = j.id - (today.getDay() || 7);
+        const d = new Date(today);
+        d.setDate(today.getDate() + diff);
+        return d.toISOString().split("T")[0]; // YYYY-MM-DD
+      })();
+
+      /* ===============================
+         CONTRAINTES (date > semaine)
+      =============================== */
       contraintes.forEach(c => {
-        if (
-          c.jour_semaine === j.id &&
-          h >= c.heure_debut.slice(0,5) &&
-          h < c.heure_fin.slice(0,5)
-        ) {
+        const matchHeure =
+          h >= c.heure_debut.slice(0, 5) &&
+          h < c.heure_fin.slice(0, 5);
+
+        if (!matchHeure) return;
+
+        /* 🔴 PRIORITÉ : contrainte à date précise */
+        if (c.jour_date && c.jour_date === dateAffichee) {
+          if (c.type === "ferme" || c.type === "cours") isFerme = true;
+          if (c.type === "ouvert") isOuvert = true;
+        }
+
+        /* 🟠 Contrainte hebdomadaire classique */
+        if (!c.jour_date && c.jour_semaine === j.id) {
           if (c.type === "ferme" || c.type === "cours") isFerme = true;
           if (c.type === "ouvert") isOuvert = true;
         }
       });
 
+      /* Règle finale contraintes */
       if (isOuvert) classe = "disponible";
       else if (isFerme) classe = "ferme";
 
+      /* ===============================
+         RÉSERVATIONS
+      =============================== */
       reservations.forEach(r => {
         const jour = new Date(r.jour).getDay() || 7;
+
         if (
           jour === j.id &&
-          h >= r.heure_debut.slice(0,5) &&
-          h < r.heure_fin.slice(0,5)
+          h >= r.heure_debut.slice(0, 5) &&
+          h < r.heure_fin.slice(0, 5)
         ) {
           if (r.status === "approved") {
             classe = "reserve";
             reservationInfo = `${r.nom} (${r.classe})`;
-          }
-          if (r.status === "pending") {
+          } else if (r.status === "pending") {
             classe = "pending";
             reservationInfo = "En attente";
           }
@@ -268,10 +294,12 @@ function renderPlanning(contraintes, reservations) {
       const active = currentView === "day" && j.id === selectedDay;
 
       grid.innerHTML += `
-        <div class="planning-cell ${classe} ${active ? "day-active" : ""}"
-             data-jour="${j.id}"
-             data-heure="${h}"
-             title="${reservationInfo || getTooltipText(classe)}">
+        <div
+          class="planning-cell ${classe} ${active ? "day-active" : ""}"
+          data-jour="${j.id}"
+          data-heure="${h}"
+          title="${reservationInfo || getTooltipText(classe)}"
+        >
           ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
         </div>
       `;
