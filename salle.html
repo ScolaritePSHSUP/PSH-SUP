@@ -92,7 +92,6 @@
   </a>
 </nav>
 
-<!-- ✅ TON JS DOIT ÊTRE DANS UN SCRIPT -->
 <script>
 /* ===============================
    🔐 SUPABASE CONFIG
@@ -100,41 +99,39 @@
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
 /* ===============================
-   📌 SALLE DEPUIS URL
+   📌 SALLE DEPUIS URL (SÉCURISÉ)
 =============================== */
 const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
 
-if (!salleNumero) {
-  alert("Salle introuvable");
+if (!salleNumero || salleNumero === "null") {
+  console.error("❌ salleNumero invalide :", salleNumero);
+  alert("Salle introuvable – lien incorrect");
   window.location.href = "salles.html";
+  throw new Error("Salle manquante");
 }
 
 document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
 
 /* ===============================
+   📱 DÉTECTION MOBILE
+=============================== */
+const isMobile = window.innerWidth < 768;
+
+/* ===============================
    🧠 ÉTAT GLOBAL
 =============================== */
-let currentView = "week"; // week | day
+let currentView = isMobile ? "day" : "week";
 let selectedDay = new Date().getDay() || 7;
 
 let lastContraintes = [];
 let lastReservations = [];
-
-/* ===============================
-   📌 Détection mobile
-=============================== */
-
-const isMobile = window.innerWidth < 768;
-
-if (isMobile) {
-  currentView = "day";
-  selectedDay = new Date().getDay() || 7;
-}
 
 /* ===============================
    📅 CONSTANTES
@@ -157,6 +154,8 @@ for (let h = 8; h < 20; h++) {
    🏫 INFOS SALLE
 =============================== */
 async function loadSalleInfos() {
+  if (!salleNumero) return;
+
   const { data, error } = await supabaseClient
     .from("salles")
     .select("*")
@@ -180,6 +179,8 @@ async function loadSalleInfos() {
    📅 LOAD PLANNING
 =============================== */
 async function loadPlanningVisuel() {
+  if (!salleNumero) return;
+
   const { data: contraintes } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
@@ -221,9 +222,13 @@ function renderPlanning(contraintes, reservations) {
   grid.innerHTML += `<div></div>`;
   jours.forEach(j => {
     const active = currentView === "day" && j.id === selectedDay;
-    grid.innerHTML += `<div class="planning-header ${active ? "day-active" : ""}">${j.label}</div>`;
+    grid.innerHTML += `
+      <div class="planning-header ${active ? "day-active" : ""}">
+        ${j.label}
+      </div>`;
   });
 
+  /* Grille */
   heures.forEach(h => {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
@@ -234,45 +239,22 @@ function renderPlanning(contraintes, reservations) {
       let isFerme = false;
       let isOuvert = false;
 
-      /* 🔑 Date réelle correspondant à la colonne */
-      const dateAffichee = (() => {
-        const today = new Date();
-        const diff = j.id - (today.getDay() || 7);
-        const d = new Date(today);
-        d.setDate(today.getDate() + diff);
-        return d.toISOString().split("T")[0]; // YYYY-MM-DD
-      })();
-
-      /* ===============================
-         CONTRAINTES (date > semaine)
-      =============================== */
+      /* Contraintes */
       contraintes.forEach(c => {
-        const matchHeure =
+        if (
+          c.jour_semaine === j.id &&
           h >= c.heure_debut.slice(0, 5) &&
-          h < c.heure_fin.slice(0, 5);
-
-        if (!matchHeure) return;
-
-        /* 🔴 PRIORITÉ : contrainte à date précise */
-        if (c.jour_date && c.jour_date === dateAffichee) {
-          if (c.type === "ferme" || c.type === "cours") isFerme = true;
-          if (c.type === "ouvert") isOuvert = true;
-        }
-
-        /* 🟠 Contrainte hebdomadaire classique */
-        if (!c.jour_date && c.jour_semaine === j.id) {
+          h < c.heure_fin.slice(0, 5)
+        ) {
           if (c.type === "ferme" || c.type === "cours") isFerme = true;
           if (c.type === "ouvert") isOuvert = true;
         }
       });
 
-      /* Règle finale contraintes */
       if (isOuvert) classe = "disponible";
       else if (isFerme) classe = "ferme";
 
-      /* ===============================
-         RÉSERVATIONS
-      =============================== */
+      /* Réservations */
       reservations.forEach(r => {
         const jour = new Date(r.jour).getDay() || 7;
 
@@ -284,7 +266,8 @@ function renderPlanning(contraintes, reservations) {
           if (r.status === "approved") {
             classe = "reserve";
             reservationInfo = `${r.nom} (${r.classe})`;
-          } else if (r.status === "pending") {
+          }
+          if (r.status === "pending") {
             classe = "pending";
             reservationInfo = "En attente";
           }
@@ -294,12 +277,10 @@ function renderPlanning(contraintes, reservations) {
       const active = currentView === "day" && j.id === selectedDay;
 
       grid.innerHTML += `
-        <div
-          class="planning-cell ${classe} ${active ? "day-active" : ""}"
-          data-jour="${j.id}"
-          data-heure="${h}"
-          title="${reservationInfo || getTooltipText(classe)}"
-        >
+        <div class="planning-cell ${classe} ${active ? "day-active" : ""}"
+             data-jour="${j.id}"
+             data-heure="${h}"
+             title="${reservationInfo || getTooltipText(classe)}">
           ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
         </div>
       `;
@@ -323,20 +304,22 @@ function activateCellClicks() {
       const date = new Date(today);
       date.setDate(today.getDate() + diff);
 
-      document.getElementById("jour").value = date.toISOString().split("T")[0];
+      document.getElementById("jour").value =
+        date.toISOString().split("T")[0];
       document.getElementById("heureDebut").value = heure;
     };
   });
 }
 
 /* ===============================
-   🗓️ BOUTONS VUE (IDS HTML)
+   🗓️ BOUTONS DE VUE
 =============================== */
 const btnWeek = document.getElementById("viewWeek");
-const btnDay  = document.getElementById("viewDay");
-const picker  = document.getElementById("dayPicker");
+const btnDay = document.getElementById("viewDay");
+const picker = document.getElementById("dayPicker");
 
 btnWeek.onclick = () => {
+  if (isMobile) return;
   currentView = "week";
   picker.style.display = "none";
   btnWeek.classList.add("active");
@@ -350,9 +333,8 @@ btnDay.onclick = () => {
   btnDay.classList.add("active");
   btnWeek.classList.remove("active");
 
-  // si vide, on met aujourd'hui
   if (!picker.value) picker.valueAsDate = new Date();
-  selectedDay = (new Date(picker.value).getDay() || 7);
+  selectedDay = new Date(picker.value).getDay() || 7;
 
   renderPlanning(lastContraintes, lastReservations);
 };
@@ -360,7 +342,6 @@ btnDay.onclick = () => {
 picker.onchange = e => {
   const d = new Date(e.target.value);
   selectedDay = d.getDay() || 7;
-  currentView = "day";
   renderPlanning(lastContraintes, lastReservations);
 };
 
@@ -371,13 +352,13 @@ loadSalleInfos();
 loadPlanningVisuel();
 
 if (isMobile) {
-  document.getElementById("viewDay").classList.add("active");
-  document.getElementById("viewWeek").classList.remove("active");
-  document.getElementById("dayPicker").style.display = "inline-block";
-  document.getElementById("dayPicker").valueAsDate = new Date();
+  btnDay.classList.add("active");
+  btnWeek.classList.remove("active");
+  picker.style.display = "inline-block";
+  picker.valueAsDate = new Date();
 }
-
 </script>
+
 
 </body>
 </html>
