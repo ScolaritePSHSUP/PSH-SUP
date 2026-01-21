@@ -197,19 +197,31 @@ function renderPlanning(contraintes, reservations) {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
-      let classe = "disponible";
-      let reservationInfo = "";
+      let isFerme = false;
+let isOuvert = false;
 
-      /* Contraintes */
-      contraintes.forEach(c => {
-        if (
-          c.jour_semaine === j.id &&
-          h >= c.heure_debut.slice(0, 5) &&
-          h < c.heure_fin.slice(0, 5)
-        ) {
-          classe = "ferme";
-        }
-      });
+contraintes.forEach(c => {
+  if (
+    c.jour_semaine === j.id &&
+    h >= c.heure_debut.slice(0, 5) &&
+    h < c.heure_fin.slice(0, 5)
+  ) {
+    if (c.type === "ferme" || c.type === "cours") {
+      isFerme = true;
+    }
+    if (c.type === "ouvert") {
+      isOuvert = true;
+    }
+  }
+});
+
+// règle finale
+if (isOuvert) {
+  classe = "disponible";
+} else if (isFerme) {
+  classe = "ferme";
+}
+
 
       /* Réservations */
       reservations.forEach(r => {
