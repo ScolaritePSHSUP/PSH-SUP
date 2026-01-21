@@ -101,12 +101,12 @@ const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===============================
-   📌 SALLE DEPUIS URL
+   📌 SALLE DEPUIS URL (OBLIGATOIRE EN 1ER)
 =============================== */
 const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
 
-if (!salleNumero) {
+if (!salleNumero || salleNumero === "null") {
   alert("Salle introuvable – lien incorrect");
   window.location.href = "salles.html";
 }
@@ -123,7 +123,6 @@ const isMobile = window.innerWidth < 768;
 =============================== */
 let currentView = isMobile ? "day" : "week";
 let selectedDay = new Date().getDay() || 7;
-
 let lastContraintes = [];
 let lastReservations = [];
 
@@ -148,13 +147,20 @@ for (let h = 8; h < 20; h++) {
    🏫 INFOS SALLE
 =============================== */
 async function loadSalleInfos() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("salles")
     .select("*")
     .eq("numero", salleNumero)
     .single();
 
-  document.getElementById("salleInfos").innerHTML = `
+  const box = document.getElementById("salleInfos");
+
+  if (error || !data) {
+    box.innerHTML = "<p style='color:red;'>Salle introuvable</p>";
+    return;
+  }
+
+  box.innerHTML = `
     📍 Campus : <strong>${data.campus}</strong><br>
     👥 Capacité : <strong>${data.capacite}</strong>
   `;
@@ -177,45 +183,63 @@ async function loadPlanningVisuel() {
   lastContraintes = contraintes || [];
   lastReservations = reservations || [];
 
-  renderPlanning(lastContraintes, lastReservations);
+  renderPlanning();
 }
 
 /* ===============================
    🖥️ RENDER PLANNING
 =============================== */
-function renderPlanning(contraintes, reservations) {
+function renderPlanning() {
   const grid = document.getElementById("planningGrid");
   grid.innerHTML = "";
 
-  grid.innerHTML += `<div></div>`;
-  jours.forEach(j => grid.innerHTML += `<div class="planning-header">${j.label}</div>`);
+  document.body.classList.toggle("day-view", currentView === "day");
 
+  /* En-tête */
+  grid.innerHTML += `<div></div>`;
+  jours.forEach(j => {
+    const active = currentView === "day" && j.id === selectedDay;
+    grid.innerHTML += `
+      <div class="planning-header ${active ? "day-active" : ""}">
+        ${j.label}
+      </div>`;
+  });
+
+  /* Grille */
   heures.forEach(h => {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
       let classe = "disponible";
 
-      contraintes.forEach(c => {
+      // contraintes
+      lastContraintes.forEach(c => {
         if (
           c.jour_semaine === j.id &&
           h >= c.heure_debut.slice(0,5) &&
           h < c.heure_fin.slice(0,5) &&
           (c.type === "cours" || c.type === "ferme")
-        ) classe = "ferme";
+        ) {
+          classe = "ferme";
+        }
       });
 
-      reservations.forEach(r => {
+      // réservations
+      lastReservations.forEach(r => {
         const jr = new Date(r.jour).getDay() || 7;
         if (
           jr === j.id &&
           h >= r.heure_debut.slice(0,5) &&
           h < r.heure_fin.slice(0,5)
-        ) classe = r.status === "approved" ? "reserve" : "pending";
+        ) {
+          classe = r.status === "approved" ? "reserve" : "pending";
+        }
       });
 
+      const active = currentView === "day" && j.id === selectedDay;
+
       grid.innerHTML += `
-        <div class="planning-cell ${classe}"
+        <div class="planning-cell ${classe} ${active ? "day-active" : ""}"
              data-jour="${j.id}"
              data-heure="${h}">
         </div>`;
@@ -226,11 +250,10 @@ function renderPlanning(contraintes, reservations) {
 }
 
 /* ===============================
-   🖱️ CLIC CELLULE (BLOCAGE GRIS)
+   🖱️ CLIC CELLULE (UNIQUEMENT DISPO)
 =============================== */
 function activateCellClicks() {
   document.querySelectorAll(".planning-cell").forEach(cell => {
-
     if (!cell.classList.contains("disponible")) {
       cell.style.cursor = "not-allowed";
       return;
@@ -240,54 +263,46 @@ function activateCellClicks() {
       const jour = parseInt(cell.dataset.jour);
       const heure = cell.dataset.heure;
 
-      const d = new Date();
-      d.setDate(d.getDate() + (jour - (d.getDay() || 7)));
+      const today = new Date();
+      const diff = jour - (today.getDay() || 7);
+      const date = new Date(today);
+      date.setDate(today.getDate() + diff);
 
-      document.getElementById("jour").value = d.toISOString().split("T")[0];
+      document.getElementById("jour").value =
+        date.toISOString().split("T")[0];
       document.getElementById("heureDebut").value = heure;
     };
   });
 }
 
 /* ===============================
-   📝 FORMULAIRE (BLOCAGE AVANT INSERT)
+   📝 FORMULAIRE RÉSERVATION (BLOCAGE GRIS)
 =============================== */
 document.getElementById("reservationForm").addEventListener("submit", async e => {
   e.preventDefault();
-
   const msg = document.getElementById("reservationMessage");
 
-  const reservation = {
-    salle_numero: salleNumero,
-    nom: nom.value,
-    classe: classe.value,
-    jour: jour.value,
-    heure_debut: heureDebut.value,
-    heure_fin: heureFin.value,
-    email: email.value,
-    motif: motif.value,
-    status: "pending"
-  };
-
-  const j = new Date(reservation.jour).getDay() || 7;
-  const h = reservation.heure_debut.slice(0,5);
+  const jour = document.getElementById("jour").value;
+  const heureDebut = document.getElementById("heureDebut").value.slice(0,5);
+  const jourSemaine = new Date(jour).getDay() || 7;
 
   let bloque = false;
 
   lastContraintes.forEach(c => {
     if (
-      c.jour_semaine === j &&
-      h >= c.heure_debut.slice(0,5) &&
-      h < c.heure_fin.slice(0,5)
+      c.jour_semaine === jourSemaine &&
+      heureDebut >= c.heure_debut.slice(0,5) &&
+      heureDebut < c.heure_fin.slice(0,5) &&
+      (c.type === "cours" || c.type === "ferme")
     ) bloque = true;
   });
 
   lastReservations.forEach(r => {
-    const jr = new Date(r.jour).getDay() || 7;
+    const j = new Date(r.jour).getDay() || 7;
     if (
-      jr === j &&
-      h >= r.heure_debut.slice(0,5) &&
-      h < r.heure_fin.slice(0,5)
+      j === jourSemaine &&
+      heureDebut >= r.heure_debut.slice(0,5) &&
+      heureDebut < r.heure_fin.slice(0,5)
     ) bloque = true;
   });
 
@@ -297,7 +312,27 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  await supabaseClient.from("reservations_salles").insert([reservation]);
+  const reservation = {
+    salle_numero: salleNumero,
+    nom: nom.value,
+    classe: classe.value,
+    jour,
+    heure_debut: heureDebut,
+    heure_fin: heureFin.value,
+    email: email.value,
+    motif: motif.value,
+    status: "pending"
+  };
+
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert([reservation]);
+
+  if (error) {
+    msg.textContent = "❌ Erreur lors de l’envoi";
+    msg.style.color = "red";
+    return;
+  }
 
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
@@ -305,12 +340,52 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
 });
 
 /* ===============================
+   🗓️ BOUTONS DE VUE
+=============================== */
+const btnWeek = document.getElementById("viewWeek");
+const btnDay = document.getElementById("viewDay");
+const picker = document.getElementById("dayPicker");
+
+btnWeek.onclick = () => {
+  if (isMobile) return;
+  currentView = "week";
+  picker.style.display = "none";
+  btnWeek.classList.add("active");
+  btnDay.classList.remove("active");
+  renderPlanning(lastContraintes, lastReservations);
+};
+
+btnDay.onclick = () => {
+  currentView = "day";
+  picker.style.display = "inline-block";
+  btnDay.classList.add("active");
+  btnWeek.classList.remove("active");
+
+  if (!picker.value) picker.valueAsDate = new Date();
+  selectedDay = new Date(picker.value).getDay() || 7;
+
+  renderPlanning(lastContraintes, lastReservations);
+};
+
+picker.onchange = e => {
+  selectedDay = new Date(e.target.value).getDay() || 7;
+  renderPlanning(lastContraintes, lastReservations);
+};
+
+/* ===============================
    🚀 INIT
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
 
+if (isMobile) {
+  btnDay.classList.add("active");
+  btnWeek.classList.remove("active");
+  picker.style.display = "inline-block";
+  picker.valueAsDate = new Date();
+}
 </script>
+
 
 
 
