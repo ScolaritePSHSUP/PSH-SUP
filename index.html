@@ -67,10 +67,10 @@
   
 
 
-<p class="ios-install-hint">
+<!-- <p class="ios-install-hint">
   📱 Sur iPhone :  
   <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
-</p>
+</p> -->
 
 
 </main>
@@ -103,9 +103,9 @@
   📲 Installer l’application
 </button>
 
-<!-- BOUTONS FLOTTANTS -->
-<button id="btnReservation" class="btn-floating btn-reservation" aria-label="Réserver une salle">🗓️</button>
-<button id="btnContact" class="btn-floating btn-contact" aria-label="Contacter l'administration">✉️</button>
+<!-- BOUTONS FLOTTANTS
+<button id="btnReservation" class="btn-floating btn-reservation">🗓️</button>
+<button id="btnContact" class="btn-floating btn-contact">✉️</button>  -->
 <button id="btnBDE" class="btn-floating btn-bde" aria-label="Votre BDE">🎉</button>
 
 
@@ -142,6 +142,7 @@ document.getElementById("btnBDE").addEventListener("click", () => {
 /* ===============================
    🔧 SERVICE WORKER
 =============================== */
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/PSH-SUP/sw.js");
