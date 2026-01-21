@@ -84,6 +84,24 @@ const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===============================
+   📌 Détection mobile
+=============================== */
+
+const isMobile = window.innerWidth < 768;
+
+if (isMobile) {
+  currentView = "day";
+  selectedDay = new Date().getDay() || 7;
+}
+
+document.getElementById("viewWeek").onclick = () => {
+  if (isMobile) return;
+  currentView = "week";
+  renderPlanning(lastContraintes, lastReservations);
+};
+
+
+/* ===============================
    📌 SALLE DEPUIS URL
 =============================== */
 const params = new URLSearchParams(window.location.search);
@@ -310,6 +328,14 @@ picker.onchange = e => {
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
+
+if (isMobile) {
+  document.getElementById("viewDay").classList.add("active");
+  document.getElementById("viewWeek").classList.remove("active");
+  document.getElementById("dayPicker").style.display = "inline-block";
+  document.getElementById("dayPicker").valueAsDate = new Date();
+}
+
 </script>
 
 </body>
