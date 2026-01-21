@@ -104,6 +104,46 @@ const supabaseClient = supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
+const reservationForm = document.getElementById("reservationForm");
+
+reservationForm.addEventListener("submit", async (e) => {
+  e.preventDefault(); // ⛔ empêche le reload (CRUCIAL)
+
+  if (!salleNumero) {
+    alert("Salle introuvable");
+    return;
+  }
+
+  const reservation = {
+    salle_numero: salleNumero, // ⚠️ TEXTE, PAS NOMBRE
+    nom: document.getElementById("nom").value,
+    classe: document.getElementById("classe").value,
+    jour: document.getElementById("jour").value,
+    heure_debut: document.getElementById("heureDebut").value,
+    heure_fin: document.getElementById("heureFin").value,
+    email: document.getElementById("email").value,
+    motif: document.getElementById("motif").value,
+    status: "pending"
+  };
+
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert([reservation]);
+
+  const msg = document.getElementById("reservationMessage");
+
+  if (error) {
+    console.error(error);
+    msg.textContent = "❌ Erreur lors de l’envoi";
+    msg.style.color = "red";
+    return;
+  }
+
+  msg.textContent = "✅ Demande envoyée (en attente de validation)";
+  msg.style.color = "green";
+  reservationForm.reset();
+});
+
 /* ===============================
    📌 SALLE DEPUIS URL (SÉCURISÉ)
 =============================== */
@@ -111,11 +151,12 @@ const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
 
 if (!salleNumero || salleNumero === "null") {
-  console.error("❌ salleNumero invalide :", salleNumero);
+  console.warn("Salle manquante ou lien incorrect :", salleNumero);
   alert("Salle introuvable – lien incorrect");
   window.location.href = "salles.html";
-  throw new Error("Salle manquante");
+  return; // ✅ STOP propre, pas d’erreur JS
 }
+
 
 document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
 
