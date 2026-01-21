@@ -151,10 +151,8 @@ const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
 
 if (!salleNumero || salleNumero === "null") {
-  console.warn("Salle manquante ou lien incorrect :", salleNumero);
   alert("Salle introuvable – lien incorrect");
   window.location.href = "salles.html";
-  return; // ✅ STOP propre, pas d’erreur JS
 }
 
 
