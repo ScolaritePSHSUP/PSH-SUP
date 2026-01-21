@@ -873,3 +873,41 @@ body {
 .planning-cell.reserve {
   background: #bfdbfe;
 }
+/* =========================
+   PLANNING – LÉGENDE
+========================= */
+
+.planning-legend {
+  display: flex;
+  gap: 1.2rem;
+  margin: 0.6rem 0 1rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+/* Couleurs identiques aux cellules */
+.legend-color.disponible {
+  background: #d1fae5; /* vert clair */
+}
+
+.legend-color.ferme {
+  background: #e5e7eb; /* gris */
+}
+
+.legend-color.reserve {
+  background: #fecaca; /* rouge clair */
+}
