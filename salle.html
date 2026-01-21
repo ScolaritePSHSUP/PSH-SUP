@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>PSH SUP – Salle</title>
+
+  <!-- Responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1 id="salleTitle">Salle</h1>
+  <p id="salleSubtitle">Planning et réservation</p>
+</header>
+
+<!-- CONTENU -->
+<main class="page">
+
+  <!-- INFOS SALLE -->
+  <section class="card" id="salleInfos">
+    <p style="color:#6b7280;">Chargement des informations…</p>
+  </section>
+
+  <!-- PLANNING -->
+  <section class="card">
+    <h2>📅 Planning de la salle</h2>
+    <div id="planningContainer">
+      <p style="color:#6b7280;">Chargement du planning…</p>
+    </div>
+  </section>
+
+  <!-- RÉSERVATION -->
+  <section class="card">
+    <h2>✍️ Réserver cette salle</h2>
+
+    <form id="reservationForm" class="contact-form">
+
+      <input type="text" id="nom" placeholder="Nom & Prénom" required>
+      <input type="text" id="classe" placeholder="Classe" required>
+
+      <input type="date" id="jour" required>
+
+      <div class="form-row">
+        <input type="time" id="heureDebut" required>
+        <input type="time" id="heureFin" required>
+      </div>
+
+      <input type="email" id="email" placeholder="Adresse mail" required>
+
+      <textarea id="motif" placeholder="Motif de la réservation" required></textarea>
+
+      <button type="submit" class="btn-primary">
+        📩 Envoyer la demande
+      </button>
+
+    </form>
+
+    <p id="reservationMessage" class="form-message"></p>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  © PSH SUP – Vie du campus – 2026
+</footer>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+/* ===============================
+   📌 RÉCUP SALLE DANS URL
+=============================== */
+const params = new URLSearchParams(window.location.search);
+const salleNumero = params.get("numero");
+
+if (!salleNumero) {
+  alert("Salle introuvable");
+  window.location.href = "salles.html";
+}
+
+document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
+
+/* ===============================
+   🏫 INFOS SALLE
+=============================== */
+async function loadSalleInfos() {
+  const { data, error } = await supabaseClient
+    .from("salles")
+    .select("*")
+    .eq("numero", salleNumero)
+    .single();
+
+  if (error || !data) {
+    document.getElementById("salleInfos").innerHTML =
+      "<p style='color:red;'>Salle introuvable</p>";
+    return;
+  }
+
+  document.getElementById("salleInfos").innerHTML = `
+    <p>
+      📍 Campus : <strong>${data.campus}</strong><br>
+      👥 Capacité : <strong>${data.capacite}</strong>
+    </p>
+    ${data.description ? `<p>${data.description}</p>` : ""}
+  `;
+}
+
+/* ===============================
+   📅 PLANNING SALLE
+=============================== */
+async function loadPlanning() {
+  const { data } = await supabaseClient
+    .from("reservations_salles")
+    .select("*")
+    .eq("salle_numero", salleNumero)
+    .order("jour", { ascending: true })
+    .order("heure_debut", { ascending: true });
+
+  const container = document.getElementById("planningContainer");
+  container.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    container.innerHTML =
+      "<p style='color:#6b7280;'>Aucune réservation pour cette salle</p>";
+    return;
+  }
+
+  data.forEach(r => {
+    container.innerHTML += `
+      <p>
+        📅 ${r.jour} — ⏰ ${r.heure_debut} → ${r.heure_fin}<br>
+        👤 ${r.nom}
+      </p>
+    `;
+  });
+}
+
+/* ===============================
+   ✍️ RÉSERVATION
+=============================== */
+document.getElementById("reservationForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert({
+      salle_numero: salleNumero,
+      nom: nom.value,
+      classe: classe.value,
+      jour: jour.value,
+      heure_debut: heureDebut.value,
+      heure_fin: heureFin.value,
+      email: email.value,
+      motif: motif.value
+    });
+
+  const msg = document.getElementById("reservationMessage");
+
+  if (error) {
+    msg.textContent = "❌ Erreur lors de la réservation";
+    msg.style.color = "red";
+    return;
+  }
+
+  msg.textContent = "✅ Demande envoyée";
+  msg.style.color = "green";
+  e.target.reset();
+  loadPlanning();
+});
+
+/* ===============================
+   🚀 INIT
+=============================== */
+loadSalleInfos();
+loadPlanning();
+</script>
+
+</body>
+</html>
