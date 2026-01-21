@@ -981,6 +981,30 @@ body {
   align-items: center;
   gap: 0.4rem;
 }
+/* Toolbar */
+.planning-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Masquage colonnes en vue jour */
+.planning-grid.day-view {
+  grid-template-columns: 80px 1fr;
+}
+
+.planning-grid.day-view .planning-header:not(.day-active),
+.planning-grid.day-view .planning-cell:not(.day-active) {
+  display: none;
+}
+
+/* Mobile auto */
+@media (max-width: 768px) {
+  .planning-grid {
+    grid-template-columns: 80px 1fr;
+  }
+}
 
 /* Pastilles */
 .legend {
