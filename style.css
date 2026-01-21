@@ -963,3 +963,47 @@ body {
   background: var(--primary);
   color: white;
 }
+/* =========================
+   PLANNING – LÉGENDE
+========================= */
+
+.planning-legend {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin: 0.8rem 0 1rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.planning-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Pastilles */
+.legend {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #ccc;
+}
+
+/* États */
+.legend.disponible {
+  background: #d1fae5; /* vert clair */
+}
+
+.legend.ferme {
+  background: #e5e7eb; /* gris */
+}
+
+.legend.pending {
+  background: #fde68a; /* jaune */
+}
+
+.legend.reserve {
+  background: #fecaca; /* rouge */
+}
