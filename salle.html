@@ -169,35 +169,46 @@ function renderPlanning(contraintes, reservations) {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
-      let classe = "disponible"; // par défaut
+  let statut = "disponible";
+  let priorite = 0;
 
-      /* Contraintes fixes */
-      contraintes.forEach(c => {
-        if (
-          c.jour_semaine === j.id &&
-          h >= c.heure_debut.slice(0, 5) &&
-          h < c.heure_fin.slice(0, 5)
-        ) {
-          if (c.type === "cours") classe = "cours";
-          if (c.type === "ferme") classe = "ferme";
-          if (c.type === "ouvert") classe = "disponible";
-        }
-      });
+  contraintes.forEach(c => {
+    if (
+      c.jour_semaine === j.id &&
+      h >= c.heure_debut.slice(0, 5) &&
+      h < c.heure_fin.slice(0, 5)
+    ) {
+      if (c.type === "ferme" && priorite < 3) {
+        statut = "ferme";
+        priorite = 3;
+      }
 
-      /* Réservations */
-      reservations.forEach(r => {
-        const jour = new Date(r.jour).getDay() || 7;
-        if (
-          jour === j.id &&
-          h >= r.heure_debut.slice(0, 5) &&
-          h < r.heure_fin.slice(0, 5)
-        ) {
-          classe = "reserve";
-        }
-      });
+      if (c.type === "cours" && priorite < 2) {
+        statut = "cours";
+        priorite = 2;
+      }
 
-      grid.innerHTML += `<div class="planning-cell ${classe}"></div>`;
-    });
+      if (c.type === "ouvert" && priorite < 1) {
+        statut = "disponible";
+        priorite = 1;
+      }
+    }
+  });
+
+  reservations.forEach(r => {
+    const jour = new Date(r.jour).getDay() || 7;
+    if (
+      jour === j.id &&
+      h >= r.heure_debut.slice(0, 5) &&
+      h < r.heure_fin.slice(0, 5)
+    ) {
+      statut = "reserve";
+    }
+  });
+
+  grid.innerHTML += `<div class="planning-cell ${statut}"></div>`;
+});
+
   });
 }
 
