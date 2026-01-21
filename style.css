@@ -937,3 +937,29 @@ body {
 .planning-cell:hover::after {
   opacity: 1;
 }
+.planning-cell.reserve {
+  background: #fecaca;
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+.planning-cell.reserve small {
+  font-size: 0.65rem;
+  line-height: 1.1;
+  display: block;
+  padding: 2px;
+}
+.planning-cell.pending {
+  background: #fde68a;
+  color: #92400e;
+}
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.view-toggle button.active {
+  background: var(--primary);
+  color: white;
+}

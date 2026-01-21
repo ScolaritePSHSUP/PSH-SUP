@@ -30,28 +30,20 @@
     <p style="color:#6b7280;">Chargement des informations…</p>
   </section>
 
+  <!-- PLANNING -->
   <section class="card">
-  <h2>📅 Planning de la salle</h2>
+    <h2>📅 Planning de la salle</h2>
 
-  <!-- LÉGENDE -->
-  <div class="planning-legend">
-    <div class="legend-item">
-      <span class="legend-color disponible"></span>
-      Disponible
+    <!-- LÉGENDE -->
+    <div class="planning-legend">
+      <span><span class="legend disponible"></span> Disponible</span>
+      <span><span class="legend ferme"></span> Cours / fermé</span>
+      <span><span class="legend pending"></span> En attente</span>
+      <span><span class="legend reserve"></span> Réservé</span>
     </div>
-    <div class="legend-item">
-      <span class="legend-color ferme"></span>
-      Fermé / cours
-    </div>
-    <div class="legend-item">
-      <span class="legend-color reserve"></span>
-      Réservé
-    </div>
-  </div>
 
-  <div id="planningGrid" class="planning-grid"></div>
-</section>
-
+    <div id="planningGrid" class="planning-grid"></div>
+  </section>
 
   <!-- RÉSERVATION -->
   <section class="card">
@@ -71,7 +63,11 @@
 
       <input type="email" id="email" placeholder="Adresse mail" required>
 
-      <textarea id="motif" placeholder="Motif de la réservation" required></textarea>
+      <textarea
+        id="motif"
+        placeholder="Motif de la réservation"
+        required
+      ></textarea>
 
       <button type="submit" class="btn-primary">
         📩 Envoyer la demande
@@ -136,14 +132,12 @@ async function loadSalleInfos() {
       📍 Campus : <strong>${data.campus}</strong><br>
       👥 Capacité : <strong>${data.capacite}</strong>
     </p>
-    ${data.description ? `<p>${data.description}</p>` : ""}
   `;
 }
 
 /* ===============================
-   📅 PLANNING VISUEL
+   📅 PLANNING – CONSTANTES
 =============================== */
-
 const jours = [
   { id: 1, label: "Lun" },
   { id: 2, label: "Mar" },
@@ -158,6 +152,9 @@ for (let h = 8; h < 20; h++) {
   heures.push(`${String(h).padStart(2, "0")}:30`);
 }
 
+/* ===============================
+   📅 CHARGEMENT PLANNING
+=============================== */
 async function loadPlanningVisuel() {
   const { data: contraintes } = await supabaseClient
     .from("salles_contraintes")
@@ -172,6 +169,20 @@ async function loadPlanningVisuel() {
   renderPlanning(contraintes || [], reservations || []);
 }
 
+/* ===============================
+   🧠 TOOLTIP
+=============================== */
+function getTooltipText(type) {
+  if (type === "disponible") return "Disponible";
+  if (type === "ferme") return "Indisponible (cours)";
+  if (type === "pending") return "Réservation en attente";
+  if (type === "reserve") return "Réservé";
+  return "";
+}
+
+/* ===============================
+   🖥️ RENDER PLANNING
+=============================== */
 function renderPlanning(contraintes, reservations) {
   const grid = document.getElementById("planningGrid");
   grid.innerHTML = "";
@@ -186,132 +197,119 @@ function renderPlanning(contraintes, reservations) {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
-      // 🔒 PAR DÉFAUT : FERME (car cours)
-      let classe = "ferme";
+      let classe = "disponible";
+      let reservationInfo = "";
 
-      /* 1️⃣ Contraintes fixes */
+      /* Contraintes */
       contraintes.forEach(c => {
         if (
           c.jour_semaine === j.id &&
           h >= c.heure_debut.slice(0, 5) &&
           h < c.heure_fin.slice(0, 5)
         ) {
-          if (c.type === "ouvert") classe = "disponible";
-          if (c.type === "ferme" || c.type === "cours") classe = "ferme";
+          classe = "ferme";
         }
       });
 
-      /* 2️⃣ Réservations (priorité max) */
+      /* Réservations */
       reservations.forEach(r => {
         const jour = new Date(r.jour).getDay() || 7;
+
         if (
           jour === j.id &&
           h >= r.heure_debut.slice(0, 5) &&
           h < r.heure_fin.slice(0, 5)
         ) {
-          classe = "reserve";
+          if (r.status === "approved") {
+            classe = "reserve";
+            reservationInfo = `${r.nom} (${r.classe})`;
+          } else if (r.status === "pending") {
+            classe = "pending";
+            reservationInfo = "En attente";
+          }
         }
       });
 
       grid.innerHTML += `
-  <div 
-    class="planning-cell ${classe}"
-    data-jour="${j.id}"
-    data-heure="${h}"
-    title="${getTooltipText(classe)}"
-  ></div>
-`;
-function getTooltipText(classe) {
-  if (classe === "disponible") return "Disponible – cliquer pour réserver";
-  if (classe === "reserve") return "Déjà réservé";
-  return "Indisponible (cours / fermé)";
+        <div
+          class="planning-cell ${classe}"
+          data-jour="${j.id}"
+          data-heure="${h}"
+          title="${reservationInfo || getTooltipText(classe)}"
+        >
+          ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
+        </div>
+      `;
+    });
+  });
+
+  activateCellClicks();
 }
 
+/* ===============================
+   🖱️ CLIC CELLULE
+=============================== */
+function activateCellClicks() {
+  document.querySelectorAll(".planning-cell").forEach(cell => {
+    cell.addEventListener("click", () => {
+      if (!cell.classList.contains("disponible")) return;
+
+      const jour = parseInt(cell.dataset.jour);
+      const heure = cell.dataset.heure;
+
+      const today = new Date();
+      const diff = jour - (today.getDay() || 7);
+      const selectedDate = new Date(today);
+      selectedDate.setDate(today.getDate() + diff);
+
+      document.getElementById("jour").value =
+        selectedDate.toISOString().split("T")[0];
+      document.getElementById("heureDebut").value = heure;
     });
   });
 }
 
-
-
 /* ===============================
    ✍️ RÉSERVATION
 =============================== */
-document
-  .getElementById("reservationForm")
-  .addEventListener("submit", async e => {
-    e.preventDefault();
+document.getElementById("reservationForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
-    const { error } = await supabaseClient
-      .from("reservations_salles")
-      .insert({
-        salle_numero: salleNumero,
-        nom: nom.value,
-        classe: classe.value,
-        jour: jour.value,
-        heure_debut: heureDebut.value,
-        heure_fin: heureFin.value,
-        email: email.value,
-        motif: motif.value
-      });
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert({
+      salle_numero: salleNumero,
+      nom: nom.value,
+      classe: classe.value,
+      jour: jour.value,
+      heure_debut: heureDebut.value,
+      heure_fin: heureFin.value,
+      email: email.value,
+      motif: motif.value,
+      status: "pending"
+    });
 
-    const msg = document.getElementById("reservationMessage");
+  const msg = document.getElementById("reservationMessage");
 
-    if (error) {
-      msg.textContent = "❌ Erreur lors de la réservation";
-      msg.style.color = "red";
-      return;
-    }
+  if (error) {
+    msg.textContent = "❌ Erreur lors de la réservation";
+    msg.style.color = "red";
+    return;
+  }
 
-    msg.textContent = "✅ Demande envoyée";
-    msg.style.color = "green";
-    e.target.reset();
-    loadPlanningVisuel();
-  });
+  msg.textContent = "✅ Demande envoyée (validation en attente)";
+  msg.style.color = "green";
+  e.target.reset();
+  loadPlanningVisuel();
+});
 
 /* ===============================
    🚀 INIT
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
-
-
-document.addEventListener("click", e => {
-  const cell = e.target.closest(".planning-cell");
-  if (!cell) return;
-
-  /* ⛔ Bloqué si non disponible */
-  if (!cell.classList.contains("disponible")) {
-    alert("⛔ Cette salle n'est pas disponible à ce créneau.");
-    return;
-  }
-
-  const jourSemaine = parseInt(cell.dataset.jour);
-  const heureDebut = cell.dataset.heure;
-
-  /* Calcul date réelle (semaine en cours) */
-  const today = new Date();
-  const diff = jourSemaine - (today.getDay() || 7);
-  const targetDate = new Date(today);
-  targetDate.setDate(today.getDate() + diff);
-
-  const dateISO = targetDate.toISOString().split("T")[0];
-
-  /* Heure fin = +30 min */
-  const [h, m] = heureDebut.split(":").map(Number);
-  const heureFin = `${String(h + (m === 30 ? 1 : 0)).padStart(2, "0")}:${m === 30 ? "00" : "30"}`;
-
-  /* Pré-remplissage */
-  document.getElementById("jour").value = dateISO;
-  document.getElementById("heureDebut").value = heureDebut;
-  document.getElementById("heureFin").value = heureFin;
-
-  /* Scroll fluide vers formulaire */
-  document
-    .getElementById("reservationForm")
-    .scrollIntoView({ behavior: "smooth" });
-});
-
 </script>
+
 
 
 </body>
