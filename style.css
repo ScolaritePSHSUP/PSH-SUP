@@ -1153,3 +1153,7 @@ body.day-view .planning-cell:not(.day-active) {
   border-radius: 3px;
   border: 1px solid #ccc;
 }
+.planning-cell:not(.disponible) {
+  pointer-events: none;
+  opacity: 0.85;
+}
