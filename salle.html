@@ -197,62 +197,65 @@ function renderPlanning(contraintes, reservations) {
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach(j => {
-      let isFerme = false;
-let isOuvert = false;
+  let classe = "disponible";
+  let reservationInfo = "";
 
-contraintes.forEach(c => {
-  if (
-    c.jour_semaine === j.id &&
-    h >= c.heure_debut.slice(0, 5) &&
-    h < c.heure_fin.slice(0, 5)
-  ) {
-    if (c.type === "ferme" || c.type === "cours") {
-      isFerme = true;
+  let isFerme = false;
+  let isOuvert = false;
+
+  contraintes.forEach(c => {
+    if (
+      c.jour_semaine === j.id &&
+      h >= c.heure_debut.slice(0, 5) &&
+      h < c.heure_fin.slice(0, 5)
+    ) {
+      if (c.type === "ferme" || c.type === "cours") {
+        isFerme = true;
+      }
+      if (c.type === "ouvert") {
+        isOuvert = true;
+      }
     }
-    if (c.type === "ouvert") {
-      isOuvert = true;
-    }
+  });
+
+  // règle finale contraintes
+  if (isOuvert) {
+    classe = "disponible";
+  } else if (isFerme) {
+    classe = "ferme";
   }
+
+  /* Réservations */
+  reservations.forEach(r => {
+    const jour = new Date(r.jour).getDay() || 7;
+
+    if (
+      jour === j.id &&
+      h >= r.heure_debut.slice(0, 5) &&
+      h < r.heure_fin.slice(0, 5)
+    ) {
+      if (r.status === "approved") {
+        classe = "reserve";
+        reservationInfo = `${r.nom} (${r.classe})`;
+      } else if (r.status === "pending") {
+        classe = "pending";
+        reservationInfo = "En attente";
+      }
+    }
+  });
+
+  grid.innerHTML += `
+    <div
+      class="planning-cell ${classe}"
+      data-jour="${j.id}"
+      data-heure="${h}"
+      title="${reservationInfo || getTooltipText(classe)}"
+    >
+      ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
+    </div>
+  `;
 });
 
-// règle finale
-if (isOuvert) {
-  classe = "disponible";
-} else if (isFerme) {
-  classe = "ferme";
-}
-
-
-      /* Réservations */
-      reservations.forEach(r => {
-        const jour = new Date(r.jour).getDay() || 7;
-
-        if (
-          jour === j.id &&
-          h >= r.heure_debut.slice(0, 5) &&
-          h < r.heure_fin.slice(0, 5)
-        ) {
-          if (r.status === "approved") {
-            classe = "reserve";
-            reservationInfo = `${r.nom} (${r.classe})`;
-          } else if (r.status === "pending") {
-            classe = "pending";
-            reservationInfo = "En attente";
-          }
-        }
-      });
-
-      grid.innerHTML += `
-        <div
-          class="planning-cell ${classe}"
-          data-jour="${j.id}"
-          data-heure="${h}"
-          title="${reservationInfo || getTooltipText(classe)}"
-        >
-          ${classe === "reserve" ? `<small>${reservationInfo}</small>` : ""}
-        </div>
-      `;
-    });
   });
 
   activateCellClicks();
