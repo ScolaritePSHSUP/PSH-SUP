@@ -1031,3 +1031,17 @@ body {
 .legend.reserve {
   background: #fecaca; /* rouge */
 }
+/* Vue jour */
+.day-active {
+  display: block !important;
+}
+
+.planning-grid .planning-header,
+.planning-grid .planning-cell {
+  display: block;
+}
+
+body.day-view .planning-header:not(.day-active),
+body.day-view .planning-cell:not(.day-active) {
+  display: none;
+}
