@@ -286,34 +286,48 @@ function activateCellClicks() {
 }
 
 /* ===============================
-   📝 FORMULAIRE RÉSERVATION (BLOCAGE GRIS)
+   📝 FORMULAIRE RÉSERVATION (BLOCAGE + INSERT OK)
 =============================== */
-document.getElementById("reservationForm").addEventListener("submit", async e => {
+document.getElementById("reservationForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const msg = document.getElementById("reservationMessage");
 
+  const nom = document.getElementById("nom").value.trim();
+  const classe = document.getElementById("classe").value.trim();
   const jour = document.getElementById("jour").value;
-  const heureDebut = document.getElementById("heureDebut").value.slice(0,5);
+  const heure_debut = document.getElementById("heureDebut").value.slice(0, 5);
+  const heure_fin = document.getElementById("heureFin").value.slice(0, 5);
+  const email = document.getElementById("email").value.trim();
+  const motif = document.getElementById("motif").value.trim();
+
   const jourSemaine = new Date(jour).getDay() || 7;
 
   let bloque = false;
 
+  // ⛔ contraintes
   lastContraintes.forEach(c => {
     if (
       c.jour_semaine === jourSemaine &&
-      heureDebut >= c.heure_debut.slice(0,5) &&
-      heureDebut < c.heure_fin.slice(0,5) &&
+      heure_debut >= c.heure_debut.slice(0,5) &&
+      heure_debut < c.heure_fin.slice(0,5) &&
       (c.type === "cours" || c.type === "ferme")
-    ) bloque = true;
+    ) {
+      bloque = true;
+    }
   });
 
+  // ⛔ réservations existantes (SAUF refusées)
   lastReservations.forEach(r => {
+    if (r.status === "refused") return;
+
     const j = new Date(r.jour).getDay() || 7;
     if (
       j === jourSemaine &&
-      heureDebut >= r.heure_debut.slice(0,5) &&
-      heureDebut < r.heure_fin.slice(0,5)
-    ) bloque = true;
+      heure_debut >= r.heure_debut.slice(0,5) &&
+      heure_debut < r.heure_fin.slice(0,5)
+    ) {
+      bloque = true;
+    }
   });
 
   if (bloque) {
@@ -322,34 +336,25 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  const reservation = {
-    salle_numero: salleNumero,
-    nom: nom.value,
-    classe: classe.value,
-    jour,
-    heure_debut: heureDebut,
-    heure_fin: heureFin,
-    email: email.value,
-    motif: motif.value,
-    status: "pending"
-  };
-
-  const { data, error } = await supabaseClient
-  .from("reservations_salles")
-  .insert([
-    {
-      salle_numero: salleNumero,
-      nom,
-      classe,
-      jour,
-      heure_debut,
-      heure_fin,
-      email,
-      motif,
-      status: "pending"
-    }
+  // ✅ INSERT SUPABASE (PROPRE)
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert([
+      {
+        salle_numero: salleNumero,
+        nom,
+        classe,
+        jour,
+        heure_debut,
+        heure_fin,
+        email,
+        motif,
+        status: "pending"
+      }
+    ]);
 
   if (error) {
+    console.error(error);
     msg.textContent = "❌ Erreur lors de l’envoi";
     msg.style.color = "red";
     return;
@@ -358,8 +363,8 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   msg.textContent = "✅ Demande envoyée (en attente de validation)";
   msg.style.color = "green";
   e.target.reset();
-
 });
+
 
 /* ===============================
    🗓️ BOUTONS DE VUE
