@@ -305,18 +305,33 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  
+  await fetch(
+  "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title: "Nouvelle réservation de salle",
+      body: `Salle ${salleNumero} – ${jour} ${heure_debut} → ${heure_fin}`
+    })
+  }
+);
+
 
   msg.textContent = "✅ Demande envoyée (en attente de validation)";
   msg.style.color = "green";
   e.target.reset();
 });
 
+
 /* ===============================
    🚀 INIT
 =============================== */
 loadSalleInfos();
 loadPlanningVisuel();
+
 </script>
 
 
