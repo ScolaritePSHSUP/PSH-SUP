@@ -294,22 +294,22 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     msg.style.color = "red";
     return;
   }
-
+  
   const { error } = await supabaseClient
   .from("reservations_salles")
-.insert([
-  {
-    salle_numero: salleNumero,
-    nom: nom,
-    classe: classe,
-    jour: jour,
-    heure_debut: heure_debut,
-    heure_fin: heure_fin,
-    email: email,
-    motif: motif,
-    status: "pending"
-  }
-]);
+  .insert([
+    {
+      salle_numero: parseInt(salleNumero, 10), // 🔥 FIX CRITIQUE
+      nom,
+      classe,
+      jour,
+      heure_debut,
+      heure_fin,
+      email,
+      motif,
+      status: "pending"
+    }
+  ]);
 
 
 
