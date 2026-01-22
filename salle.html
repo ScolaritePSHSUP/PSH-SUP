@@ -296,8 +296,19 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   }
 
   const { error } = await supabaseClient
-    .from("reservations_salles")
-    .insert([{ salle_numero: salleNumero, nom, classe, jour, heure_debut, heure_fin, email, motif, status: "pending" }]);
+  .from("reservations_salles")
+  .insert({
+    salle_numero: salleNumero,
+    nom: nom,
+    classe: classe,
+    jour: jour,
+    heure_debut: heure_debut,
+    heure_fin: heure_fin,
+    email: email,
+    motif: motif,
+    status: "pending"
+  });
+
 
   if (error) {
     msg.textContent = "❌ Erreur lors de l’envoi";
