@@ -297,7 +297,8 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
 
   const { error } = await supabaseClient
   .from("reservations_salles")
-  .insert({
+.insert([
+  {
     salle_numero: salleNumero,
     nom: nom,
     classe: classe,
@@ -307,7 +308,9 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     email: email,
     motif: motif,
     status: "pending"
-  });
+  }
+]);
+
 
 
   if (error) {
