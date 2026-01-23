@@ -119,20 +119,106 @@ document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
 let lastContraintes = [];
 let lastReservations = [];
 
+const jours = [
+  { id: 1, label: "Lun" },
+  { id: 2, label: "Mar" },
+  { id: 3, label: "Mer" },
+  { id: 4, label: "Jeu" },
+  { id: 5, label: "Ven" }
+];
+
+const heures = [];
+for (let h = 8; h < 20; h++) {
+  heures.push(`${String(h).padStart(2, "0")}:00`);
+  heures.push(`${String(h).padStart(2, "0")}:30`);
+}
+
 /* ===============================
    🏫 INFOS SALLE
 =============================== */
 async function loadSalleInfos() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("salles")
     .select("*")
     .eq("numero", salleNumero)
     .single();
 
+  if (error || !data) return;
+
   document.getElementById("salleInfos").innerHTML = `
     📍 Campus : <strong>${data.campus}</strong><br>
     👥 Capacité : <strong>${data.capacite}</strong>
   `;
+}
+
+/* ===============================
+   🖥️ RENDER PLANNING
+=============================== */
+function renderPlanning() {
+  const grid = document.getElementById("planningGrid");
+  grid.innerHTML = "";
+
+  grid.innerHTML += "<div></div>";
+  jours.forEach(j => {
+    grid.innerHTML += `<div class="planning-header">${j.label}</div>`;
+  });
+
+  heures.forEach(h => {
+    grid.innerHTML += `<div class="planning-hour">${h}</div>`;
+
+    jours.forEach(j => {
+      let classe = "disponible";
+
+      lastContraintes.forEach(c => {
+        if (
+          c.jour_semaine === j.id &&
+          h >= c.heure_debut.slice(0,5) &&
+          h < c.heure_fin.slice(0,5)
+        ) {
+          classe = "ferme";
+        }
+      });
+
+      lastReservations.forEach(r => {
+        if (r.status === "refused") return;
+        const jr = new Date(r.jour).getDay() || 7;
+        if (
+          jr === j.id &&
+          h >= r.heure_debut.slice(0,5) &&
+          h < r.heure_fin.slice(0,5)
+        ) {
+          classe = r.status === "approved" ? "reserve" : "pending";
+        }
+      });
+
+      grid.innerHTML += `
+        <div class="planning-cell ${classe}"
+             data-jour="${j.id}"
+             data-heure="${h}">
+        </div>`;
+    });
+  });
+
+  activateCellClicks();
+}
+
+/* ===============================
+   🖱️ CLIC CELLULE
+=============================== */
+function activateCellClicks() {
+  document.querySelectorAll(".planning-cell.disponible").forEach(cell => {
+    cell.onclick = () => {
+      const jour = parse = parseInt(cell.dataset.jour);
+      const heure = cell.dataset.heure;
+
+      const d = new Date();
+      d.setDate(d.getDate() + (jour - (d.getDay() || 7)));
+
+      document.getElementById("jour").value =
+        d.toISOString().split("T")[0];
+      document.getElementById("heureDebut").value = heure;
+    };
+  });
 }
 
 /* ===============================
@@ -156,19 +242,19 @@ async function loadPlanningVisuel() {
 }
 
 /* ===============================
-   📝 RESERVATION
+   📝 RÉSERVATION
 =============================== */
 document.getElementById("reservationForm").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("reservationMessage");
 
-  const nom = nomInput.value.trim();
-  const classe = classeInput.value.trim();
-  const jour = jourInput.value;
-  const heure_debut = heureDebut.value.slice(0,5);
-  const heure_fin = heureFin.value.slice(0,5);
-  const email = emailInput.value.trim();
-  const motif = motifInput.value.trim();
+  const nom = document.getElementById("nom").value.trim();
+  const classe = document.getElementById("classe").value.trim();
+  const jour = document.getElementById("jour").value;
+  const heure_debut = document.getElementById("heureDebut").value.slice(0,5);
+  const heure_fin = document.getElementById("heureFin").value.slice(0,5);
+  const email = document.getElementById("email").value.trim();
+  const motif = document.getElementById("motif").value.trim();
 
   const { error } = await supabaseClient
     .from("reservations_salles")
@@ -191,7 +277,7 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  // 🔥 EDGE FUNCTION
+  // 🔔 EDGE FUNCTION
   await fetch(
     "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
     {
@@ -209,6 +295,8 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
   e.target.reset();
+
+  loadPlanningVisuel();
 });
 
 /* ===============================
@@ -217,6 +305,7 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
 loadSalleInfos();
 loadPlanningVisuel();
 </script>
+
 
 
 
