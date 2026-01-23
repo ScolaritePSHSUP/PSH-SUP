@@ -294,13 +294,14 @@ if (!session) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${session.access_token}`
+      "x-webhook-secret": "psh-notify-2026-super-secret"
     },
     body: JSON.stringify({
       salle: salleNumero,
       jour,
       heure_debut,
-      heure_fin
+      heure_fin,
+      status: "pending"
     })
   }
 );
