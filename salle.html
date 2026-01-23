@@ -278,19 +278,33 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   }
 
   // 🔔 EDGE FUNCTION
+  
+  const {
+  data: { session }
+} = await supabaseClient.auth.getSession();
+
+if (!session) {
+  console.error("❌ Pas de session, impossible d’appeler la fonction");
+  return;
+}
+
   await fetch(
-    "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        salle: salleNumero,
-        jour,
-        heure_debut,
-        heure_fin
-      })
-    }
-  );
+  "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    },
+    body: JSON.stringify({
+      salle: salleNumero,
+      jour,
+      heure_debut,
+      heure_fin
+    })
+  }
+);
+
 
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
