@@ -93,16 +93,10 @@
 </nav>
 
 <script>
-/* ===============================
-   🔐 SUPABASE CONFIG
-=============================== */
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ===============================
-   📌 SALLE
-=============================== */
 const params = new URLSearchParams(window.location.search);
 const salleNumero = params.get("numero");
 
@@ -113,9 +107,6 @@ if (!salleNumero) {
 
 document.getElementById("salleTitle").textContent = `Salle ${salleNumero}`;
 
-/* ===============================
-   🧠 STATE
-=============================== */
 let lastContraintes = [];
 let lastReservations = [];
 
@@ -133,17 +124,14 @@ for (let h = 8; h < 20; h++) {
   heures.push(`${String(h).padStart(2, "0")}:30`);
 }
 
-/* ===============================
-   🏫 INFOS SALLE
-=============================== */
 async function loadSalleInfos() {
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("salles")
     .select("*")
     .eq("numero", salleNumero)
     .single();
 
-  if (error || !data) return;
+  if (!data) return;
 
   document.getElementById("salleInfos").innerHTML = `
     📍 Campus : <strong>${data.campus}</strong><br>
@@ -151,9 +139,6 @@ async function loadSalleInfos() {
   `;
 }
 
-/* ===============================
-   🖥️ RENDER PLANNING
-=============================== */
 function renderPlanning() {
   const grid = document.getElementById("planningGrid");
   grid.innerHTML = "";
@@ -174,9 +159,7 @@ function renderPlanning() {
           c.jour_semaine === j.id &&
           h >= c.heure_debut.slice(0,5) &&
           h < c.heure_fin.slice(0,5)
-        ) {
-          classe = "ferme";
-        }
+        ) classe = "ferme";
       });
 
       lastReservations.forEach(r => {
@@ -194,36 +177,28 @@ function renderPlanning() {
       grid.innerHTML += `
         <div class="planning-cell ${classe}"
              data-jour="${j.id}"
-             data-heure="${h}">
-        </div>`;
+             data-heure="${h}"></div>`;
     });
   });
 
   activateCellClicks();
 }
 
-/* ===============================
-   🖱️ CLIC CELLULE
-=============================== */
 function activateCellClicks() {
   document.querySelectorAll(".planning-cell.disponible").forEach(cell => {
     cell.onclick = () => {
-      const jour = parse = parseInt(cell.dataset.jour);
+      const jour = parseInt(cell.dataset.jour, 10);
       const heure = cell.dataset.heure;
 
       const d = new Date();
       d.setDate(d.getDate() + (jour - (d.getDay() || 7)));
 
-      document.getElementById("jour").value =
-        d.toISOString().split("T")[0];
+      document.getElementById("jour").value = d.toISOString().split("T")[0];
       document.getElementById("heureDebut").value = heure;
     };
   });
 }
 
-/* ===============================
-   📅 LOAD PLANNING
-=============================== */
 async function loadPlanningVisuel() {
   const { data: contraintes } = await supabaseClient
     .from("salles_contraintes")
@@ -241,9 +216,6 @@ async function loadPlanningVisuel() {
   renderPlanning();
 }
 
-/* ===============================
-   📝 RÉSERVATION
-=============================== */
 document.getElementById("reservationForm").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("reservationMessage");
@@ -277,49 +249,34 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  // 🔔 EDGE FUNCTION
-  
-  const {
-  data: { session }
-} = await supabaseClient.auth.getSession();
-
-if (!session) {
-  console.error("❌ Pas de session, impossible d’appeler la fonction");
-  return;
-}
-
   await fetch(
-  "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-webhook-secret": "psh-notify-2026"
-    },
-    body: JSON.stringify({
-      salle: salleNumero,
-      jour,
-      heure_debut,
-      heure_fin,
-      status: "pending"
-    })
-  }
-);
-
+    "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-webhook-secret": "psh-notify-2026"
+      },
+      body: JSON.stringify({
+        salle: salleNumero,
+        jour,
+        heure_debut,
+        heure_fin,
+        status: "pending"
+      })
+    }
+  );
 
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
   e.target.reset();
-
   loadPlanningVisuel();
 });
 
-/* ===============================
-   🚀 INIT
-=============================== */
 loadSalleInfos();
 loadPlanningVisuel();
 </script>
+
 
 
 
