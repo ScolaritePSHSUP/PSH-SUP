@@ -249,27 +249,6 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
     return;
   }
 
-  await fetch(
-  "https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-admin",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-      "x-webhook-secret": "psh-notify-2026"
-    },
-    body: JSON.stringify({
-      salle: salleNumero,
-      jour,
-      heure_debut,
-      heure_fin,
-      status: "pending"
-    })
-  }
-);
-
-
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
   e.target.reset();
