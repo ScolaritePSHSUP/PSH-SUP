@@ -17,11 +17,14 @@
 </header>
 
 <center>
-  <a href="admin.html" class="btn-secondary">
-    ⬅ Retour dashboard
-  </a>
+  <a href="admin.html" class="btn-secondary">⬅ Retour dashboard</a>
 </center>
 
+<center style="margin-top:1rem;">
+  <button id="enablePush" class="btn-primary">
+    🔔 Activer les notifications
+  </button>
+</center>
 
 <main class="page">
   <section class="card">
@@ -78,7 +81,7 @@ document.getElementById("enablePush").addEventListener("click", async () => {
     return;
   }
 
-  const reg = await navigator.serviceWorker.register("/PSH-SUP-ADMIN/admin-sw.js");
+  const reg = await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw.js");
   await navigator.serviceWorker.ready;
 
   await subscribeAdminPush();
@@ -109,12 +112,16 @@ async function subscribeAdminPush() {
 
   const json = sub.toJSON();
 
-  await supabaseClient.from("push_subscriptions").upsert({
-    audience: "admin",
-    endpoint: json.endpoint,
-    p256dh: json.keys.p256dh,
-    auth: json.keys.auth
-  });
+  await supabaseClient
+    .from("push_subscriptions")
+    .upsert({
+      audience: "admin",
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth
+    }, {
+      onConflict: "endpoint"
+    });
 
   console.log("✅ Subscription enregistrée");
 }
