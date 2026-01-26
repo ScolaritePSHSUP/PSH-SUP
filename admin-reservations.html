@@ -81,7 +81,7 @@ document.getElementById("enablePush").addEventListener("click", async () => {
     return;
   }
 
-  const reg = await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw.js");
+  const reg = await navigator.serviceWorker.register("/PSH-SUP/sw.js");
   await navigator.serviceWorker.ready;
 
   await subscribeAdminPush();
