@@ -7,6 +7,268 @@
   --accent: #e5e7eb;
 }
 
+/* =========================
+   BOUTONS – GLOBAL
+========================= */
+
+/* Reset */
+button {
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+/* Base commune */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+
+  transition: transform .08s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+/* Tap mobile */
+.btn-primary:active,
+.btn-secondary:active,
+.btn-danger:active,
+.btn-ghost:active {
+  transform: scale(0.98);
+}
+
+/* Focus clavier */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.btn-ghost:focus-visible,
+.btn-floating:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(178, 58, 44, 0.25);
+}
+
+/* Désactivé */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================
+   VARIANTES
+========================= */
+
+/* Primary */
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+/* Secondary */
+.btn-secondary {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Danger */
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+}
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--secondary);
+  border-color: #e5e7eb;
+}
+.btn-ghost:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* =========================
+   BOUTONS FLOTTANTS
+========================= */
+
+.btn-floating {
+  position: fixed;
+  right: 16px;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  border: none;
+  background: var(--primary);
+  color: white;
+
+  font-size: 1.35rem;
+  cursor: pointer;
+
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  z-index: 300;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.btn-floating:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.35);
+}
+
+.btn-floating:active {
+  transform: scale(0.96);
+}
+
+/* Positions flottants (si tu les utilises) */
+.btn-reservation { bottom: 140px; }
+.btn-contact     { bottom: 80px;  }
+
+/* BDE */
+.btn-bde {
+  bottom: 200px;
+  background: #047857;
+}
+.btn-bde:hover {
+  background: #065f46;
+}
+
+/* Logout admin flottant */
+.btn-logout-floating {
+  position: fixed;
+  right: 16px;
+  bottom: 80px;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+
+  background: #d64545;
+  color: white;
+  font-size: 1.3rem;
+
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  z-index: 400;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.btn-logout-floating:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.35);
+}
+.btn-logout-floating:active {
+  transform: scale(0.96);
+}
+
+/* =========================
+   BOUTON INSTALL (PUBLIC)
+========================= */
+
+.install-btn {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 90px; /* au-dessus bottom-nav */
+  z-index: 500;
+
+  padding: 0.85rem 1.2rem;
+  border-radius: 999px;
+
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+}
+
+/* =========================
+   TOOLBAR PLANNING (SALLE)
+========================= */
+
+.planning-toolbar {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0.2rem 0 1rem;
+}
+
+.planning-toolbar input[type="date"] {
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+/* Boutons de la toolbar = look "chip" */
+.planning-toolbar .btn-secondary {
+  border-radius: 999px;
+  padding: 0.65rem 0.95rem;
+}
+
+/* Actif (semaine/jour) */
+.planning-toolbar .btn-secondary.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+}
+
+/* =========================
+   MOBILE – confort
+========================= */
+@media (max-width: 480px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-ghost {
+    width: 100%;
+  }
+
+  .planning-toolbar .btn-secondary {
+    width: auto; /* toolbar garde ses boutons compacts */
+  }
+}
+
+
 /* BASE */
 * { box-sizing: border-box; font-family: Arial, sans-serif; }
 body { margin:0; background:var(--background); color:var(--secondary); padding-bottom:80px; }
