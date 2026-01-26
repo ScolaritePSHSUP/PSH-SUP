@@ -127,27 +127,6 @@ const supabaseClient = supabase.createClient(
 );
 
 /* ===============================
-   🔑 VAPID PUBLIC KEY
-=============================== */
-const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-}
-
-/* ===============================
-   🔧 SERVICE WORKER UNIQUE
-=============================== */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
-}
-
-/* ===============================
    🔔 BOUTON NOTIF PUBLIC
 =============================== */
 const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
@@ -157,6 +136,11 @@ function urlBase64ToUint8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+/* Service Worker */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
 }
 
 document.getElementById("enablePushPublic").addEventListener("click", async () => {
@@ -170,8 +154,8 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
   const permission = await Notification.requestPermission();
   alert("2️⃣ permission = " + permission);
 
-  const reg = await navigator.serviceWorker.register("/sw.js");
-  alert("3️⃣ sw enregistré");
+  const reg = await navigator.serviceWorker.ready;
+  alert("3️⃣ sw prêt");
 
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
