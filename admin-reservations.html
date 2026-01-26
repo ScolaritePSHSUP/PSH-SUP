@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>PSH SUP – Admin Réservations</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -21,9 +20,7 @@
 </center>
 
 <center style="margin-top:1rem;">
-  <button id="enablePush" class="btn-primary">
-    🔔 Activer les notifications
-  </button>
+  <button id="enablePush" class="btn-primary">🔔 Activer les notifications</button>
 </center>
 
 <main class="page">
@@ -46,9 +43,7 @@
       <button id="filterReset" class="btn-secondary">Réinitialiser</button>
     </div>
 
-    <div id="reservationsList" class="reservations-list">
-      <p style="color:#6b7280;text-align:center;">Chargement…</p>
-    </div>
+    <div id="reservationsList"></div>
   </section>
 </main>
 
@@ -59,7 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
-
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (async () => {
@@ -68,27 +62,33 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     location.href = "admin-login.html";
     return;
   }
-
   loadReservations();
 })();
 
-/* ================= PUSH BUTTON ================= */
-
-document.getElementById("enablePush").addEventListener("click", async () => {
+/* ========== PUSH ========== */
+document.getElementById("enablePush").onclick = async () => {
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    alert("Notifications refusées");
-    return;
-  }
+  if (permission !== "granted") return alert("Notifications refusées");
 
-  const reg = await navigator.serviceWorker.register("/PSH-SUP/sw.js");
+  const reg = await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw.js");
   await navigator.serviceWorker.ready;
 
-  await subscribeAdminPush();
-  alert("✅ Notifications activées");
-});
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array("BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo")
+  });
 
-/* ================= SUBSCRIBE ================= */
+  const json = sub.toJSON();
+
+  await supabaseClient.from("push_subscriptions").upsert({
+    audience: "admin",
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth
+  });
+
+  alert("✅ Notifications activées");
+};
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -97,37 +97,7 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-async function subscribeAdminPush() {
-  const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
-
-  if (!sub) {
-    const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
-
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-  }
-
-  const json = sub.toJSON();
-
-  await supabaseClient
-    .from("push_subscriptions")
-    .upsert({
-      audience: "admin",
-      endpoint: json.endpoint,
-      p256dh: json.keys.p256dh,
-      auth: json.keys.auth
-    }, {
-      onConflict: "endpoint"
-    });
-
-  console.log("✅ Subscription enregistrée");
-}
-
-/* ================= UI ================= */
-
+/* ========== UI ========== */
 const el = id => document.getElementById(id);
 let allReservations = [];
 
@@ -162,6 +132,14 @@ function applyFilters() {
   render(list);
 }
 
+async function updateStatus(id, status) {
+  await supabaseClient.from("reservations_salles")
+    .update({ status })
+    .eq("id", id);
+
+  loadReservations();
+}
+
 function render(list) {
   const c = el("reservationsList");
   c.innerHTML = "";
@@ -177,10 +155,20 @@ function render(list) {
         <strong>Salle ${r.salle_numero}</strong>
         <p>${r.jour} ${r.heure_debut} → ${r.heure_fin}</p>
         <p>${r.nom} (${r.classe})</p>
+        <p>Status : <strong>${r.status}</strong></p>
+        ${
+          r.status === "pending" ? `
+          <button onclick="approve(${r.id})" class="btn-primary">✔ Valider</button>
+          <button onclick="refuse(${r.id})" class="btn-secondary">✖ Refuser</button>
+          ` : ""
+        }
       </div>
     `;
   });
 }
+
+window.approve = id => updateStatus(id, "approved");
+window.refuse = id => updateStatus(id, "refused");
 
 el("filterStatus").onchange = applyFilters;
 el("filterSalle").onchange = applyFilters;
