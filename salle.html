@@ -177,7 +177,8 @@ function renderPlanning() {
       grid.innerHTML += `
         <div class="planning-cell ${classe}"
              data-jour="${j.id}"
-             data-heure="${h}"></div>`;
+             data-heure="${h}"
+             title="${classe}"></div>`;
     });
   });
 
@@ -216,6 +217,57 @@ async function loadPlanningVisuel() {
   renderPlanning();
 }
 
+/* =======================
+   VUE JOUR / SEMAINE
+======================= */
+const viewWeekBtn = document.getElementById("viewWeek");
+const viewDayBtn = document.getElementById("viewDay");
+const dayPicker = document.getElementById("dayPicker");
+
+let currentDay = new Date().getDay();
+if (currentDay === 0) currentDay = 1;
+
+function setDayView(dayId) {
+  document.body.classList.add("day-view");
+
+  document.querySelectorAll(".planning-header, .planning-cell").forEach(el => {
+    el.classList.remove("day-active");
+  });
+
+  document.querySelectorAll(`[data-jour="${dayId}"]`).forEach(el => {
+    el.classList.add("day-active");
+  });
+
+  document.querySelectorAll(".planning-header").forEach((h, i) => {
+    if (i + 1 === dayId) h.classList.add("day-active");
+  });
+}
+
+viewDayBtn.onclick = () => {
+  viewDayBtn.classList.add("active");
+  viewWeekBtn.classList.remove("active");
+  dayPicker.style.display = "inline-block";
+  setDayView(currentDay);
+};
+
+viewWeekBtn.onclick = () => {
+  viewWeekBtn.classList.add("active");
+  viewDayBtn.classList.remove("active");
+  dayPicker.style.display = "none";
+  document.body.classList.remove("day-view");
+};
+
+dayPicker.onchange = () => {
+  const d = new Date(dayPicker.value);
+  let j = d.getDay();
+  if (j === 0) j = 1;
+  currentDay = j;
+  setDayView(currentDay);
+};
+
+/* =======================
+   FORMULAIRE
+======================= */
 document.getElementById("reservationForm").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("reservationMessage");
@@ -253,14 +305,18 @@ document.getElementById("reservationForm").addEventListener("submit", async e =>
   msg.style.color = "green";
   e.target.reset();
   loadPlanningVisuel();
-});
+};
 
+/* =======================
+   INIT
+======================= */
 loadSalleInfos();
 loadPlanningVisuel();
+
+if (window.innerWidth < 768) {
+  viewDayBtn.click();
+}
 </script>
-
-
-
 
 
 </body>
