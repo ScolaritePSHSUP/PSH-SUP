@@ -125,6 +125,27 @@ function formatDate(dateStr) {
   });
 }
 
+async function subscribePublicPush() {
+  const reg = await navigator.serviceWorker.ready;
+
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+  }
+
+  const json = sub.toJSON();
+
+  await supabaseClient.from("push_subscriptions").upsert({
+    audience: "public",
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth
+  });
+}
+
 /* ===============================
    📅 CHARGER LES ÉVÉNEMENTS
 =============================== */

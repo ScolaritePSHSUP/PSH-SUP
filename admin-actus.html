@@ -4,18 +4,29 @@
   <meta charset="UTF-8">
 
   <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#b23a2c">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PSH SUP">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
 
-  <link rel="manifest" href="manifest.json">
+  <!-- Manifest -->
+  <link rel="manifest" href="/PSH-SUP-ADMIN/manifest.json">
 
-  <title>Admin PSH SUP – Actualités</title>
+
+  <title>PSH SUP – Administration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="../style.css">
+  <!-- Icons -->
+	<link rel="apple-touch-icon" href="/PSH-SUP-ADMIN/icons/apple-touch-icon.png">
+	<link rel="icon" sizes="192x192" href="/PSH-SUP-ADMIN/icons/icon-192.png">
+	<link rel="icon" sizes="512x512" href="/PSH-SUP-ADMIN/icons/icon-512.png">
+
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -27,7 +38,7 @@
 </header>
 
 <center>
-  <a href="admin-dashboard.html" class="btn-secondary">
+  <a href="admin.html" class="btn-secondary">
     ⬅ Retour dashboard
   </a>
 </center>
@@ -83,9 +94,6 @@
 <button id="logout" class="btn-logout-floating">🚪</button>
 
 <script>
-/* ===============================
-   🔐 SUPABASE CONFIG – PSH SUP
-=============================== */
 const supabaseClient = supabase.createClient(
   "https://wqjzgpxcudobdbhtatgw.supabase.co",
   "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_",
@@ -93,7 +101,8 @@ const supabaseClient = supabase.createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false
+      detectSessionInUrl: false,
+      storage: window.localStorage
     }
   }
 );
@@ -101,106 +110,82 @@ const supabaseClient = supabase.createClient(
 /* ===============================
    🔒 PROTECTION ADMIN
 =============================== */
+let currentUserId = null;
+
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+
+  if (!data.session || data.session.user.user_metadata.role !== "admin") {
     window.location.href = "admin-login.html";
+    return;
   }
+
+  currentUserId = data.session.user.id;
 })();
 
 /* ===============================
-   🧠 ÉTAT GLOBAL
+   🧠 ÉTAT
 =============================== */
 let editingActuId = null;
-let imageDeleted = false;
 
 /* ===============================
-   🖼️ IMAGE PREVIEW
-=============================== */
-const imageInput = document.getElementById("image");
-const imagePreview = document.getElementById("imagePreview");
-const deleteImageBtn = document.getElementById("deleteImageBtn");
-
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  if (!file) return;
-  imagePreview.src = URL.createObjectURL(file);
-  imagePreview.style.display = "block";
-});
-
-/* ===============================
-   ☁️ UPLOAD IMAGE
-=============================== */
-async function uploadImage(file) {
-  const ext = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${ext}`;
-  const path = `actualites/${fileName}`;
-
-  const { error } = await supabaseClient.storage
-    .from("actualites")
-    .upload(path, file);
-
-  if (error) return null;
-
-  return supabaseClient.storage
-    .from("actualites")
-    .getPublicUrl(path).data.publicUrl;
-}
-
-/* ===============================
-   🗑️ DELETE IMAGE STORAGE
-=============================== */
-async function deleteImageFromStorage(url) {
-  if (!url) return;
-  const path = url.split("/storage/v1/object/public/actualites/")[1];
-  if (!path) return;
-
-  await supabaseClient.storage
-    .from("actualites")
-    .remove([`actualites/${path}`]);
-}
-
-/* ===============================
-   📢 SUBMIT ACTU
+   📢 SUBMIT ACTUALITÉ
 =============================== */
 document.getElementById("actuForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  let imageUrl = null;
+  const titre = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value;
+  const contenu = document.getElementById("content").value.trim();
 
-  if (imageInput.files.length > 0) {
-    imageUrl = await uploadImage(imageInput.files[0]);
-  } else if (editingActuId && !imageDeleted) {
-    const { data } = await supabaseClient
-      .from("actualites")
-      .select("image_url")
-      .eq("id", editingActuId)
-      .single();
-    imageUrl = data.image_url;
-  }
-
-  const actu = {
-    title: title.value,
-    category: category.value,
-    summary: summary.value,
-    content: content.value,
-    image_url: imageUrl
+  const payload = {
+    titre,
+    category,
+    contenu,
+    publie: true
   };
 
-  const query = editingActuId
-    ? supabaseClient.from("actualites").update(actu).eq("id", editingActuId)
-    : supabaseClient.from("actualites").insert({ ...actu, published: true });
+  let result;
 
-  const { error } = await query;
-  if (error) return alert("Erreur lors de l’enregistrement");
+  if (editingActuId) {
+    result = await supabaseClient
+      .from("actualites")
+      .update(payload)
+      .eq("id", editingActuId);
+  } else {
+    result = await supabaseClient
+      .from("actualites")
+      .insert(payload);
+  }
+
+  if (result.error) {
+    console.error(result.error);
+    alert("❌ Erreur lors de l’enregistrement");
+    return;
+  }
+
+  alert(editingActuId ? "✏️ Actualité mise à jour" : "✅ Actualité publiée");
+
+  // 🔔 NOTIF PUBLIC UNIQUEMENT À L’INSERT
+  if (!editingActuId) {
+    await fetch("https://wqjzgpxcudobdbhtatgw.supabase.co/functions/v1/notify-public", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + (await supabaseClient.auth.getSession()).data.session.access_token
+      },
+      body: JSON.stringify({
+        title: "📰 Nouvelle actualité",
+        body: titre
+      })
+    });
+  }
 
   e.target.reset();
   editingActuId = null;
-  imageDeleted = false;
-  imagePreview.style.display = "none";
-  deleteImageBtn.style.display = "none";
   document.getElementById("cancelEdit").style.display = "none";
   document.querySelector(".btn-primary").textContent = "📢 Publier";
+
   loadAdminActus();
 });
 
@@ -208,72 +193,81 @@ document.getElementById("actuForm").addEventListener("submit", async (e) => {
    📋 LOAD ACTUS
 =============================== */
 async function loadAdminActus() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("actualites")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
 
   const container = document.getElementById("adminActusList");
   container.innerHTML = "";
 
   data.forEach(actu => {
     container.innerHTML += `
-      <div class="admin-actu-card" data-id="${actu.id}">
-        <h3>${actu.title}</h3>
+      <div class="admin-actu-card">
+        <h3>${actu.titre}</h3>
         <small>${actu.category}</small>
         <div class="admin-actions">
           <button onclick="editActu('${actu.id}')">✏️</button>
           <button onclick="deleteActu('${actu.id}')">🗑️</button>
         </div>
-      </div>`;
+      </div>
+    `;
   });
 }
 loadAdminActus();
 
 /* ===============================
-   ✏️ EDIT
+   ✏️ EDIT ACTU
 =============================== */
 window.editActu = async (id) => {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("actualites")
     .select("*")
     .eq("id", id)
     .single();
 
-  title.value = data.title;
-  category.value = data.category;
-  summary.value = data.summary;
-  content.value = data.content;
+  if (error) return alert("Erreur chargement");
+
+  document.getElementById("title").value = data.titre;
+  document.getElementById("category").value = data.category;
+  document.getElementById("content").value = data.contenu;
 
   editingActuId = id;
-  imageDeleted = false;
-
-  if (data.image_url) {
-    imagePreview.src = data.image_url;
-    imagePreview.style.display = "block";
-    deleteImageBtn.style.display = "block";
-  }
 
   document.getElementById("cancelEdit").style.display = "block";
   document.querySelector(".btn-primary").textContent = "💾 Mettre à jour";
 };
 
 /* ===============================
-   🗑️ DELETE
+   🗑️ DELETE ACTU
 =============================== */
 window.deleteActu = async (id) => {
   if (!confirm("Supprimer cette actualité ?")) return;
 
-  const { data } = await supabaseClient
+  const { error } = await supabaseClient
     .from("actualites")
-    .select("image_url")
-    .eq("id", id)
-    .single();
+    .delete()
+    .eq("id", id);
 
-  await deleteImageFromStorage(data.image_url);
-  await supabaseClient.from("actualites").delete().eq("id", id);
+  if (error) return alert("Erreur suppression");
 
+  alert("🗑️ Actualité supprimée");
   loadAdminActus();
+};
+
+/* ===============================
+   ❌ CANCEL EDIT
+=============================== */
+document.getElementById("cancelEdit").onclick = () => {
+  document.getElementById("actuForm").reset();
+  editingActuId = null;
+  document.getElementById("cancelEdit").style.display = "none";
+  document.querySelector(".btn-primary").textContent = "📢 Publier";
 };
 
 /* ===============================
@@ -284,6 +278,7 @@ document.getElementById("logout").onclick = async () => {
   window.location.href = "admin-login.html";
 };
 </script>
+
 
 </body>
 </html>

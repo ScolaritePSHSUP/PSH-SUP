@@ -1,79 +1,85 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
+		<!DOCTYPE html>
+		<html lang="fr">
+		<head>
+		  <meta charset="UTF-8">
 
-  <title>PSH SUP – Connexion Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+		  <!-- PWA -->
+		  <meta name="theme-color" content="#b23a2c">
+		  <meta name="apple-mobile-web-app-capable" content="yes">
+		  <meta name="mobile-web-app-capable" content="yes">
+		  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		  <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
 
-  <!-- PWA -->
-  <meta name="theme-color" content="#b23a2c">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PSH SUP Admin">
+		  <!-- Manifest -->
+		  <link rel="manifest" href="/PSH-SUP-ADMIN/manifest.json">
 
-  <!-- Manifest & icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="../style.css">
+		  <title>PSH SUP – Administration</title>
+		  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+		  <!-- Icons -->
+			<link rel="apple-touch-icon" href="/PSH-SUP-ADMIN/icons/apple-touch-icon.png">
+			<link rel="icon" sizes="192x192" href="/PSH-SUP-ADMIN/icons/icon-192.png">
+			<link rel="icon" sizes="512x512" href="/PSH-SUP-ADMIN/icons/icon-512.png">
 
-<body>
 
-<!-- HEADER -->
-<header class="header">
-  <h1>Connexion Admin</h1>
-  <p>Accès réservé BDE & Administration</p>
-</header>
+		  <!-- Styles -->
+		  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
 
-<!-- CONTENU -->
-<main class="login-wrapper">
+		  <!-- Supabase -->
+		  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+		</head>
 
-  <div class="login-card">
 
-    <div class="login-icon">🔐</div>
+		<body>
 
-    <h2>Administration</h2>
-    <p>Merci de vous identifier</p>
+		<!-- HEADER -->
+		<header class="header">
+		  <h1>Connexion Admin</h1>
+		  <p>Accès réservé Administration</p>
+		</header>
 
-    <form id="adminLoginForm">
+		<!-- CONTENU -->
+		<main class="login-wrapper">
 
-      <input
-        type="email"
-        id="email"
-        placeholder="Adresse email"
-        required
-      >
+		  <div class="login-card">
 
-      <input
-        type="password"
-        id="password"
-        placeholder="Mot de passe"
-        required
-      >
+			<div class="login-icon">🔐</div>
 
-      <button type="submit">
-        Se connecter
-      </button>
+			<h2>Administration</h2>
+			<p>Merci de vous identifier</p>
 
-    </form>
+			<form id="adminLoginForm">
 
-    <p id="loginError" class="form-message"></p>
+			  <input
+				type="email"
+				id="email"
+				placeholder="Adresse email"
+				required
+			  >
 
-  </div>
+			  <input
+				type="password"
+				id="password"
+				placeholder="Mot de passe"
+				required
+			  >
 
-</main>
+			  <button type="submit">
+				Se connecter
+			  </button>
 
-<footer class="footer">
-  © PSH SUP – Administration – 2026
-</footer>
+			</form>
+
+			<p id="loginError" class="form-message"></p>
+
+		  </div>
+
+		</main>
+
+		<footer class="footer">
+		  © PSH SUP – Administration – 2026
+		</footer>
 
 <script>
 /* ===============================
@@ -112,9 +118,10 @@ form.addEventListener("submit", async (e) => {
   }
 
   // ✅ Connexion réussie
-  window.location.href = "admin-dashboard.html";
+  window.location.href = "admin.html";
 });
 </script>
 
-</body>
-</html>
+
+		</body>
+		</html>

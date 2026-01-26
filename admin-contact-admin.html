@@ -10,15 +10,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
 
-  <title>Admin – Contacts Administration</title>
+  <!-- Manifest -->
+  <link rel="manifest" href="/PSH-SUP-ADMIN/manifest.json">
+
+  <title>PSH SUP – Administration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="/PSH-SUP-ADMIN/icons/apple-touch-icon.png">
+  <link rel="icon" sizes="192x192" href="/PSH-SUP-ADMIN/icons/icon-192.png">
+  <link rel="icon" sizes="512x512" href="/PSH-SUP-ADMIN/icons/icon-512.png">
 
-  <link rel="stylesheet" href="../style.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -30,7 +36,7 @@
 </header>
 
 <center>
-  <a href="admin-dashboard.html" class="btn-secondary">
+  <a href="admin.html" class="btn-secondary">
     ⬅ Retour dashboard
   </a>
 </center>
@@ -61,11 +67,11 @@
       <option value="">Choisir</option>
       <option value="Direction">Direction</option>
       <option value="Administration">Administration</option>
-      <option value="Scolarite">Scolarité</option>
+      <option value="Scolarité">Scolarité</option>
       <option value="Communication">Communication</option>
-      <option value="Carriere">Carrière</option>
+      <option value="Carrière">Carrière</option>
       <option value="Internationale">Internationale</option>
-      <option value="Pedagogie">Pédagogie</option>
+      <option value="Pédagogie">Pédagogie</option>
     </select>
 
     <label>Email</label>
@@ -73,13 +79,6 @@
 
     <label>Téléphone</label>
     <input type="text" id="telephone">
-
-    <label>Campus</label>
-    <select id="campus">
-      <option value="">—</option>
-      <option value="Paris">Paris</option>
-      <option value="Molitor">Molitor</option>
-    </select>
 
     <label>Ordre d’affichage</label>
     <input type="number" id="ordre" min="1">
@@ -98,11 +97,19 @@
     ❌ Annuler modification
   </button>
 
-  <!-- LISTE -->
-  <section class="admin-list">
-    <h2>Contacts enregistrés</h2>
-    <div id="adminContactsList"></div>
-  </section>
+<section class="admin-list">
+  <h2>Contacts enregistrés</h2>
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="🔍 Rechercher (nom, prénom, poste, catégorie...)"
+    class="admin-search"
+  >
+
+  <div id="adminContactsList"></div>
+</section>
+
 
 </main>
 
@@ -132,15 +139,17 @@ const supabaseClient = supabase.createClient(
 =============================== */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+
+  if (!data.session || data.session.user.user_metadata.role !== "admin") {
     window.location.href = "admin-login.html";
   }
 })();
 
 /* ===============================
-   🧠 ÉTAT
+   🧠 ÉTAT GLOBAL
 =============================== */
 let editingContactId = null;
+let allContacts = [];
 
 /* ===============================
    👤 SUBMIT CONTACT
@@ -156,16 +165,18 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
     categorie: categorie.value,
     email: email.value.trim() || null,
     telephone: telephone.value.trim() || null,
-    campus: campus.value || null,
     ordre: ordre.value ? parseInt(ordre.value) : null,
     actif: actif.checked
   };
 
   const query = editingContactId
-    ? supabaseClient.from("contacts_administration")
+    ? supabaseClient
+        .from("contacts_administration")
         .update(contact)
         .eq("id", editingContactId)
-    : supabaseClient.from("contacts_administration").insert(contact);
+    : supabaseClient
+        .from("contacts_administration")
+        .insert(contact);
 
   const { error } = await query;
 
@@ -175,7 +186,7 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  e.target.reset();
+  contactForm.reset();
   editingContactId = null;
   cancelEdit.style.display = "none";
   document.querySelector(".btn-primary").textContent = "👤 Ajouter le contact";
@@ -198,16 +209,29 @@ async function loadAdminContacts() {
     return;
   }
 
+  allContacts = data;
+  renderContacts(allContacts);
+}
+
+/* ===============================
+   🖥️ RENDER CONTACTS
+=============================== */
+function renderContacts(contacts) {
   const container = document.getElementById("adminContactsList");
   container.innerHTML = "";
 
-  data.forEach(c => {
+  if (contacts.length === 0) {
+    container.innerHTML = "<p>Aucun résultat</p>";
+    return;
+  }
+
+  contacts.forEach(c => {
     container.innerHTML += `
       <div class="admin-actu-card" data-id="${c.id}">
         <h3>${c.prenom} ${c.nom}</h3>
         <small>
           ${c.poste || ""}<br>
-          ${c.categorie} • ${c.campus || ""}
+          ${c.categorie}
         </small>
         <div class="admin-actions">
           <button onclick="editContact('${c.id}')">✏️</button>
@@ -217,28 +241,38 @@ async function loadAdminContacts() {
     `;
   });
 }
-loadAdminContacts();
+
+/* ===============================
+   🔍 SEARCH
+=============================== */
+document.getElementById("searchInput").addEventListener("input", e => {
+  const query = e.target.value.toLowerCase().trim();
+
+  const filtered = allContacts.filter(c =>
+    `${c.prenom} ${c.nom} ${c.poste || ""} ${c.categorie}`
+      .toLowerCase()
+      .includes(query)
+  );
+
+  renderContacts(filtered);
+});
 
 /* ===============================
    ✏️ EDIT CONTACT
 =============================== */
 window.editContact = async (id) => {
-  const { data } = await supabaseClient
-    .from("contacts_administration")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const contact = allContacts.find(c => c.id === id);
+  if (!contact) return;
 
-  civilite.value = data.civilite || "";
-  prenom.value = data.prenom;
-  nom.value = data.nom;
-  poste.value = data.poste || "";
-  categorie.value = data.categorie;
-  email.value = data.email || "";
-  telephone.value = data.telephone || "";
-  campus.value = data.campus || "";
-  ordre.value = data.ordre || "";
-  actif.checked = data.actif;
+  civilite.value = contact.civilite || "";
+  prenom.value = contact.prenom;
+  nom.value = contact.nom;
+  poste.value = contact.poste || "";
+  categorie.value = contact.categorie;
+  email.value = contact.email || "";
+  telephone.value = contact.telephone || "";
+  ordre.value = contact.ordre || "";
+  actif.checked = contact.actif;
 
   editingContactId = id;
   cancelEdit.style.display = "block";
@@ -282,6 +316,11 @@ logout.onclick = async () => {
   await supabaseClient.auth.signOut();
   window.location.href = "admin-login.html";
 };
+
+/* ===============================
+   🚀 INIT
+=============================== */
+loadAdminContacts();
 </script>
 
 </body>

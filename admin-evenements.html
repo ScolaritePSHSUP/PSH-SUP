@@ -10,16 +10,26 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
 
-  <title>Admin – Événements | PSH SUP</title>
+  <!-- Manifest -->
+  <link rel="manifest" href="/PSH-SUP-ADMIN/manifest.json">
+
+
+  <title>PSH SUP – Administration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+  <!-- Icons -->
+	<link rel="apple-touch-icon" href="/PSH-SUP-ADMIN/icons/apple-touch-icon.png">
+	<link rel="icon" sizes="192x192" href="/PSH-SUP-ADMIN/icons/icon-192.png">
+	<link rel="icon" sizes="512x512" href="/PSH-SUP-ADMIN/icons/icon-512.png">
 
-  <link rel="stylesheet" href="../style.css">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 
 <body>
 
@@ -29,7 +39,7 @@
 </header>
 
 <center>
-  <a href="admin-dashboard.html" class="btn-secondary">
+  <a href="admin.html" class="btn-secondary">
     ⬅ Retour dashboard
   </a>
 </center>
@@ -84,17 +94,15 @@
 /* ===============================
    🔐 SUPABASE CONFIG
 =============================== */
-const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
-
 const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
+  "https://wqjzgpxcudobdbhtatgw.supabase.co",
+  "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_",
   {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false
+      detectSessionInUrl: false,
+      storage: window.localStorage
     }
   }
 );
@@ -102,58 +110,23 @@ const supabaseClient = supabase.createClient(
 /* ===============================
    🔒 PROTECTION ADMIN
 =============================== */
+let currentUserId = null;
+
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (!data.session) {
+
+  if (!data.session || data.session.user.user_metadata.role !== "admin") {
     window.location.href = "admin-login.html";
+    return;
   }
+
+  currentUserId = data.session.user.id;
 })();
 
 /* ===============================
    🧠 ÉTAT
 =============================== */
 let editingEventId = null;
-let imageDeleted = false;
-
-/* ===============================
-   🖼️ IMAGE PREVIEW
-=============================== */
-const imageInput = document.getElementById("image");
-const imagePreview = document.getElementById("imagePreview");
-const deleteImageBtn = document.getElementById("deleteImageBtn");
-
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  if (!file) return;
-  imagePreview.src = URL.createObjectURL(file);
-  imagePreview.style.display = "block";
-});
-
-/* ===============================
-   ☁️ UPLOAD IMAGE
-=============================== */
-async function uploadImage(file) {
-  const ext = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${ext}`;
-  const filePath = `evenements/${fileName}`;
-
-  const { error } = await supabaseClient.storage
-    .from("evenements")
-    .upload(filePath, file);
-
-  if (error) return null;
-
-  return supabaseClient.storage
-    .from("evenements")
-    .getPublicUrl(filePath).data.publicUrl;
-}
-
-async function deleteImageFromStorage(imageUrl) {
-  if (!imageUrl) return;
-  const path = imageUrl.split("/storage/v1/object/public/evenements/")[1];
-  if (!path) return;
-  await supabaseClient.storage.from("evenements").remove([`evenements/${path}`]);
-}
 
 /* ===============================
    📅 SUBMIT EVENT
@@ -161,47 +134,40 @@ async function deleteImageFromStorage(imageUrl) {
 document.getElementById("eventForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  let imageUrl = null;
-
-  if (imageInput.files.length > 0) {
-    imageUrl = await uploadImage(imageInput.files[0]);
-  } else if (editingEventId && !imageDeleted) {
-    const { data } = await supabaseClient
-      .from("evenements")
-      .select("image_url")
-      .eq("id", editingEventId)
-      .single();
-    imageUrl = data.image_url;
-  }
-
-  const event = {
-    title: title.value,
-    event_date: event_date.value,
-    event_time: event_time.value || null,
-    location: location.value,
-    description: description.value,
-    image_url: imageUrl,
-    published: true
+  const payload = {
+    titre: document.getElementById("title").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    campus: document.getElementById("location").value.trim(),
+    date_debut: document.getElementById("event_date").value,
+    publie: true,
+    created_by: currentUserId
   };
 
-  const query = editingEventId
-    ? supabaseClient.from("evenements").update(event).eq("id", editingEventId)
-    : supabaseClient.from("evenements").insert(event);
+  let query;
+  if (editingEventId) {
+    query = supabaseClient
+      .from("evenements")
+      .update(payload)
+      .eq("id", editingEventId);
+  } else {
+    query = supabaseClient
+      .from("evenements")
+      .insert(payload);
+  }
 
   const { error } = await query;
 
   if (error) {
     console.error(error);
-    alert("Erreur lors de l’enregistrement");
+    alert(error.message);
     return;
   }
 
+  alert(editingEventId ? "✏️ Événement mis à jour" : "✅ Événement publié");
+
   e.target.reset();
   editingEventId = null;
-  imageDeleted = false;
-  imagePreview.style.display = "none";
-  deleteImageBtn.style.display = "none";
-  cancelEdit.style.display = "none";
+  document.getElementById("cancelEdit").style.display = "none";
   document.querySelector(".btn-primary").textContent = "📅 Publier l’événement";
 
   loadAdminEvents();
@@ -211,97 +177,109 @@ document.getElementById("eventForm").addEventListener("submit", async (e) => {
    📋 LOAD EVENTS
 =============================== */
 async function loadAdminEvents() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("evenements")
     .select("*")
-    .order("event_date", { ascending: false });
+    .order("date_debut", { ascending: false });
+
+  if (error) {
+    console.error("Erreur chargement événements :", error);
+    return;
+  }
 
   const container = document.getElementById("adminEventsList");
   container.innerHTML = "";
 
-  data.forEach(ev => {
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p>Aucun événement</p>";
+    return;
+  }
+
+  data.forEach(event => {
     container.innerHTML += `
-      <div class="admin-actu-card" data-id="${ev.id}">
-        <h3>${ev.title}</h3>
-        <small>${ev.event_date} – ${ev.location}</small>
+      <div class="admin-actu-card">
+        <h3>${event.titre}</h3>
+        <small>
+          📅 ${new Date(event.date_debut).toLocaleDateString("fr-FR")}
+          • ${event.campus}
+        </small>
         <div class="admin-actions">
-          <button onclick="editEvent('${ev.id}')">✏️</button>
-          <button onclick="deleteEvent('${ev.id}')">🗑️</button>
+          <button onclick="editEvent('${event.id}')">✏️</button>
+          <button onclick="deleteEvent('${event.id}')">🗑️</button>
         </div>
       </div>
     `;
   });
 }
+
 loadAdminEvents();
 
 /* ===============================
-   ✏️ EDIT EVENT
+   ✏️ EDIT
 =============================== */
 window.editEvent = async (id) => {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("evenements")
     .select("*")
     .eq("id", id)
     .single();
 
-  title.value = data.title;
-  event_date.value = data.event_date;
-  event_time.value = data.event_time || "";
-  location.value = data.location;
-  description.value = data.description;
-
-  editingEventId = id;
-  imageDeleted = false;
-
-  if (data.image_url) {
-    imagePreview.src = data.image_url;
-    imagePreview.style.display = "block";
-    deleteImageBtn.style.display = "block";
+  if (error) {
+    alert("Erreur chargement événement");
+    return;
   }
 
-  cancelEdit.style.display = "block";
+  document.getElementById("title").value = data.titre;
+  document.getElementById("description").value = data.description;
+  document.getElementById("location").value = data.campus;
+  document.getElementById("event_date").value = data.date_debut;
+
+  editingEventId = id;
+  document.getElementById("cancelEdit").style.display = "block";
   document.querySelector(".btn-primary").textContent = "💾 Mettre à jour";
 };
 
 /* ===============================
-   🗑️ DELETE EVENT
+   🗑️ DELETE
 =============================== */
 window.deleteEvent = async (id) => {
   if (!confirm("Supprimer cet événement ?")) return;
 
-  const { data } = await supabaseClient
+  const { error } = await supabaseClient
     .from("evenements")
-    .select("image_url")
-    .eq("id", id)
-    .single();
+    .delete()
+    .eq("id", id);
 
-  await deleteImageFromStorage(data.image_url);
-  await supabaseClient.from("evenements").delete().eq("id", id);
+  if (error) {
+    console.error(error);
+    alert("Erreur suppression");
+    return;
+  }
 
+  alert("🗑️ Événement supprimé");
   loadAdminEvents();
 };
 
 /* ===============================
    ❌ CANCEL
 =============================== */
-cancelEdit.onclick = () => {
-  eventForm.reset();
+document.getElementById("cancelEdit").onclick = () => {
+  document.getElementById("eventForm").reset();
   editingEventId = null;
-  imageDeleted = false;
-  imagePreview.style.display = "none";
-  deleteImageBtn.style.display = "none";
-  cancelEdit.style.display = "none";
+  document.getElementById("cancelEdit").style.display = "none";
   document.querySelector(".btn-primary").textContent = "📅 Publier l’événement";
 };
 
 /* ===============================
    🚪 LOGOUT
 =============================== */
-logout.onclick = async () => {
+document.getElementById("logout").onclick = async () => {
   await supabaseClient.auth.signOut();
   window.location.href = "admin-login.html";
 };
 </script>
+
+
 
 </body>
 </html>

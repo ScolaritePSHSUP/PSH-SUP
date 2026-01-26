@@ -133,116 +133,188 @@ const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_ANON_KEY
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  }
 );
 
 /* ===============================
-   🔒 AUTH GUARD
+   🔒 PROTECTION ADMIN
 =============================== */
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (!data.session) {
-    window.location.href = "login.html";
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session || data.session.user.user_metadata.role !== "admin") {
+    window.location.href = "admin-login.html";
   }
-});
+})();
 
 /* ===============================
-   🏫 CHARGER LES SALLES
+   🧠 ÉTAT GLOBAL
 =============================== */
-async function loadSalles() {
+let allReservations = [];
+
+/* ===============================
+   📥 LOAD RESERVATIONS
+=============================== */
+async function loadReservations() {
   const { data, error } = await supabaseClient
-    .from("salles")
-    .select("id, numero, capacite")
-    .order("numero", { ascending: true });
+    .from("reservations_salles")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Erreur chargement salles :", error);
+    document.getElementById("reservationsList").innerHTML =
+      "<p style='text-align:center;color:red;'>Erreur de chargement</p>";
     return;
   }
 
-  const select = document.getElementById("salleSelect");
-  select.innerHTML = '<option value="">Choisir une salle</option>';
+  allReservations = data || [];
+  fillSalleFilter();
+  applyFilters();
+}
 
-  data.forEach(salle => {
-    const option = document.createElement("option");
-    option.value = salle.id;
-    option.textContent = `Salle ${salle.numero} — ${salle.capacite} places`;
-    select.appendChild(option);
+/* ===============================
+   🏫 FILTRE SALLES
+=============================== */
+function fillSalleFilter() {
+  const select = document.getElementById("filterSalle");
+  if (!select) return;
+
+  const salles = [...new Set(allReservations.map(r => String(r.salle_numero)))]
+    .sort((a, b) => a.localeCompare(b));
+
+  select.innerHTML =
+    `<option value="all">Toutes les salles</option>` +
+    salles.map(s => `<option value="${s}">Salle ${s}</option>`).join("");
+}
+
+/* ===============================
+   🔍 APPLY FILTERS
+=============================== */
+function applyFilters() {
+  const status = document.getElementById("filterStatus").value;
+  const salle  = document.getElementById("filterSalle").value;
+  const date   = document.getElementById("filterDate").value;
+
+  let filtered = [...allReservations];
+
+  if (status !== "all") {
+    filtered = filtered.filter(r => r.status === status);
+  }
+
+  if (salle !== "all") {
+    filtered = filtered.filter(r => String(r.salle_numero) === salle);
+  }
+
+  if (date) {
+    filtered = filtered.filter(r => r.jour === date);
+  }
+
+  renderReservations(filtered);
+}
+
+/* ===============================
+   🧾 RENDER
+=============================== */
+function renderReservations(list) {
+  const container = document.getElementById("reservationsList");
+  container.innerHTML = "";
+
+  if (!list.length) {
+    container.innerHTML = `
+      <p style="text-align:center;color:#6b7280;">
+        Aucune réservation trouvée
+      </p>`;
+    return;
+  }
+
+  list.forEach(r => {
+    const badge = {
+      pending:  "badge-pending",
+      approved: "badge-approved",
+      refused:  "badge-refused"
+    }[r.status];
+
+    const label = {
+      pending:  "En attente",
+      approved: "Validée",
+      refused:  "Refusée"
+    }[r.status];
+
+    container.innerHTML += `
+      <div class="reservation-card">
+        <div class="reservation-header">
+          <strong>Salle ${r.salle_numero}</strong>
+          <span class="badge ${badge}">${label}</span>
+        </div>
+
+        <div class="reservation-body">
+          <p>📅 <strong>${r.jour}</strong></p>
+          <p>⏰ ${r.heure_debut.slice(0,5)} – ${r.heure_fin.slice(0,5)}</p>
+          <p>👤 ${r.nom} – ${r.classe}</p>
+          <p class="motif">📝 ${r.motif}</p>
+        </div>
+
+        <div class="reservation-actions">
+          ${
+            r.status === "pending"
+              ? `
+                <button class="btn-success"
+                  onclick="updateStatus('${r.id}', 'approved')">✔ Valider</button>
+                <button class="btn-danger"
+                  onclick="updateStatus('${r.id}', 'refused')">✖ Refuser</button>
+              `
+              : `<span class="muted">—</span>`
+          }
+        </div>
+      </div>
+    `;
   });
 }
 
 /* ===============================
-   ➕ ENVOI RÉSERVATION
+   ✅ UPDATE STATUS
 =============================== */
-document.getElementById("reservationForm").addEventListener("submit", async e => {
-  e.preventDefault();
-
-  const msg = document.getElementById("reservationMessage");
-  msg.textContent = "";
-  msg.style.color = "";
-
-  const salleId = document.getElementById("salleSelect").value;
-  const date = document.getElementById("date").value;
-  const debut = document.getElementById("heureDebut").value;
-  const fin = document.getElementById("heureFin").value;
-  const nomPrenom = document.getElementById("nomPrenom").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const motif = document.getElementById("motif").value.trim();
-
-  const button = e.target.querySelector("button");
-  button.disabled = true;
-  button.textContent = "Envoi en cours...";
-
-  /* ✅ VALIDATIONS */
-  if (!salleId) {
-    msg.textContent = "❌ Veuillez sélectionner une salle";
-    msg.style.color = "#b23a2c";
-    button.disabled = false;
-    button.textContent = "Envoyer la demande";
-    return;
-  }
-
-  if (fin <= debut) {
-    msg.textContent = "❌ L’heure de fin doit être après l’heure de début";
-    msg.style.color = "#b23a2c";
-    button.disabled = false;
-    button.textContent = "Envoyer la demande";
-    return;
-  }
-
-  /* 🕒 Construction dates UTC propres */
-  const dateDebut = new Date(`${date}T${debut}:00`);
-  const dateFin = new Date(`${date}T${fin}:00`);
-
+async function updateStatus(id, status) {
   const { error } = await supabaseClient
-    .from("reservations")
-    .insert({
-      salle_id: salleId,
-      date_debut: dateDebut.toISOString(),
-      date_fin: dateFin.toISOString(),
-      nom_prenom: nomPrenom,
-      email: email,
-      motif: motif || null
-    });
-
-  button.disabled = false;
-  button.textContent = "Envoyer la demande";
+    .from("reservations_salles")
+    .update({ status })
+    .eq("id", id);
 
   if (error) {
-    console.error("SUPABASE ERROR:", error);
-    msg.textContent = "❌ Salle déjà réservée ou données invalides";
-    msg.style.color = "#b23a2c";
-  } else {
-    msg.textContent = "✅ Demande envoyée avec succès";
-    msg.style.color = "green";
-    e.target.reset();
+    alert("Erreur lors de la mise à jour");
+    return;
   }
+
+  await loadReservations();
+}
+
+/* ===============================
+   🎛️ EVENTS FILTRES
+=============================== */
+document.getElementById("filterStatus").addEventListener("change", applyFilters);
+document.getElementById("filterSalle").addEventListener("change", applyFilters);
+document.getElementById("filterDate").addEventListener("change", applyFilters);
+
+document.getElementById("filterReset").addEventListener("click", () => {
+  document.getElementById("filterStatus").value = "all";
+  document.getElementById("filterSalle").value = "all";
+  document.getElementById("filterDate").value = "";
+  applyFilters();
 });
 
 /* ===============================
    🚀 INIT
 =============================== */
-loadSalles();
+loadReservations();
 </script>
+
+
 
 
 </body>
