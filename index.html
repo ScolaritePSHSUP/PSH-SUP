@@ -127,7 +127,7 @@ const supabaseClient = supabase.createClient(
 );
 
 /* ===============================
-   🔑 VAPID KEY
+   🔑 VAPID PUBLIC KEY
 =============================== */
 const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
 
@@ -136,27 +136,70 @@ function urlBase64ToUint8Array(base64String) {
   const base64 = (base64String + padding)
     .replace(/-/g, "+")
     .replace(/_/g, "/");
-
   const raw = atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
 /* ===============================
-   🔧 SERVICE WORKER (UN SEUL)
+   🔧 SERVICE WORKER UNIQUE
 =============================== */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
 
 /* ===============================
-   🔔 BOUTON NOTIFICATIONS PUBLIC
+   🔔 BOUTON NOTIF PUBLIC
 =============================== */
-alert("JS chargé");
+document.getElementById("enablePushPublic").addEventListener("click", async () => {
+  try {
+    if (!("serviceWorker" in navigator)) {
+      alert("Navigateur incompatible");
+      return;
+    }
 
-document.getElementById("enablePushPublic").addEventListener("click", () => {
-  alert("BOUTON CLIQUÉ");
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      alert("Notifications refusées");
+      return;
+    }
+
+    const reg = await navigator.serviceWorker.ready;
+
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    const json = sub.toJSON();
+
+    const { error } = await supabaseClient
+      .from("push_subscriptions")
+      .upsert({
+        audience: "public",
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth
+      }, { onConflict: "endpoint" });
+
+    if (error) {
+      console.error("Erreur Supabase:", error);
+      alert("Erreur enregistrement abonnement");
+      return;
+    }
+
+    alert("✅ Notifications PUBLIC activées !");
+    console.log("SUB PUBLIC OK:", json);
+
+  } catch (err) {
+    console.error("Erreur push:", err);
+    alert("Erreur technique push");
+  }
 });
 </script>
+
 
 
 
