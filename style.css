@@ -1157,3 +1157,72 @@ body.day-view .planning-cell:not(.day-active) {
   pointer-events: none;
   opacity: 0.85;
 }
+/* ===========================
+   📱 FIX PLANNING MOBILE
+=========================== */
+@media (max-width: 768px) {
+
+  .planning-grid {
+    grid-template-columns: 60px repeat(5, minmax(60px, 1fr));
+    font-size: 11px;
+  }
+
+  .planning-cell {
+    min-height: 28px;
+  }
+
+  .planning-header {
+    font-size: 11px;
+    padding: 4px;
+  }
+
+  .planning-hour {
+    font-size: 10px;
+  }
+
+  /* Vue jour */
+  body.day-view .planning-header,
+  body.day-view .planning-cell {
+    display: none;
+  }
+
+  body.day-view .planning-header.day-active,
+  body.day-view .planning-cell.day-active {
+    display: block;
+  }
+
+  body.day-view .planning-grid {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .planning-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+}
+
+/* ===========================
+   🎨 COULEURS VISIBLES
+=========================== */
+.planning-cell.disponible {
+  background-color: #22c55e; /* vert */
+  cursor: pointer;
+}
+
+.planning-cell.reserve {
+  background-color: #ef4444; /* rouge */
+}
+
+.planning-cell.pending {
+  background-color: #f59e0b; /* orange */
+}
+
+.planning-cell.ferme {
+  background-color: #9ca3af; /* gris */
+}
+
+.planning-cell {
+  border: 1px solid #e5e7eb;
+}
