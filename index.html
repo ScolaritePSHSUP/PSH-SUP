@@ -155,9 +155,24 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
     alert("4️⃣ sw prêt");
 
     const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
+  userVisibleOnly: true,
+  applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+});
+
+const json = sub.toJSON();
+
+await supabaseClient
+  .from("push_subscriptions")
+  .upsert({
+    audience: "public",
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth
+  }, { onConflict: "endpoint" });
+
+alert("✅ Notifications PUBLIC activées !");
+console.log(json);
+
 
     alert("5️⃣ abonnement OK");
     console.log(sub);
