@@ -115,44 +115,45 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 
-const supabaseClient = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
 
-
-
 /* ===============================
-   📋 BOUTONS FLOTTANTS
+   🔑 VAPID KEY
 =============================== */
-
-  document.getElementById("btnReservation").addEventListener("click", () => {
-    window.location.href = "reservations.html";
-  });
-
-  document.getElementById("btnContact").addEventListener("click", () => {
-    window.location.href = "contacts.html";
-  });
-
-document.getElementById("btnBDE").addEventListener("click", () => {
-  window.location.href = "https://bde-psh-sup.netlify.app/";
-});
-
-
 const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
   const raw = atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-document.getElementById("enablePushPublic").addEventListener("click", async () => {
+/* ===============================
+   🔧 SERVICE WORKER (UN SEUL)
+=============================== */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
+}
+
+/* ===============================
+   🔔 BOUTON NOTIFICATIONS PUBLIC
+=============================== */
+const btn = document.getElementById("enablePushPublic");
+
+btn.addEventListener("click", async () => {
   if (!("serviceWorker" in navigator)) {
     alert("Navigateur incompatible avec les notifications");
     return;
@@ -164,59 +165,6 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
     return;
   }
 
-  // ✅ Enregistrer le seul SW
-  const reg = await navigator.serviceWorker.register("/sw.js");
-  await navigator.serviceWorker.ready;
-
-  let sub = await reg.pushManager.getSubscription();
-  if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-  }
-
-  const json = sub.toJSON();
-
-  const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  await supabaseClient
-    .from("push_subscriptions")
-    .upsert({
-      audience: "public",
-      endpoint: json.endpoint,
-      p256dh: json.keys.p256dh,
-      auth: json.keys.auth
-    }, {
-      onConflict: "endpoint"
-    });
-
-  alert("✅ Notifications activées pour les actualités et événements !");
-});
-
-
-await supabaseClient
-  .from("push_subscriptions")
-  .upsert({
-    audience: "public",
-    endpoint: json.endpoint,
-    p256dh: json.keys.p256dh,
-    auth: json.keys.auth
-  }, { onConflict: "endpoint" });
-
-
-/* ===============================
-   🔧 SERVICE WORKER
-=============================== */
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/PSH-SUP/sw.js");
-  });
-}
-async function subscribePublicPush() {
   const reg = await navigator.serviceWorker.ready;
 
   let sub = await reg.pushManager.getSubscription();
@@ -229,39 +177,21 @@ async function subscribePublicPush() {
 
   const json = sub.toJSON();
 
-  await supabaseClient.from("push_subscriptions").upsert({
-    audience: "public",
-    endpoint: json.endpoint,
-    p256dh: json.keys.p256dh,
-    auth: json.keys.auth
-  });
-}
+  await supabaseClient
+    .from("push_subscriptions")
+    .upsert({
+      audience: "public",
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth
+    }, {
+      onConflict: "endpoint"
+    });
 
-/* ===============================
-   📲 INSTALL PWA (FINAL)
-=============================== */
-let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  // Affiche le bouton
-  installBtn.hidden = false;
-
-  installBtn.addEventListener("click", async () => {
-    installBtn.hidden = true;
-    deferredPrompt.prompt();
-
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log("Installation :", outcome);
-
-    deferredPrompt = null;
-  });
+  alert("✅ Notifications activées pour les actus et événements !");
 });
-
 </script>
+
 
 
 </body>
