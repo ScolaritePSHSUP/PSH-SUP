@@ -66,7 +66,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 })();
 
 /* ========== PUSH ========== */
-document.getElementById("enablePush").onclick = async () => {
+document.getElementById("enablePush").addEventListener("click", async () => {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return alert("Notifications refusées");
 
@@ -88,7 +88,7 @@ document.getElementById("enablePush").onclick = async () => {
   });
 
   alert("✅ Notifications activées");
-};
+});
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -133,7 +133,8 @@ function applyFilters() {
 }
 
 async function updateStatus(id, status) {
-  await supabaseClient.from("reservations_salles")
+  await supabaseClient
+    .from("reservations_salles")
     .update({ status })
     .eq("id", id);
 
@@ -150,38 +151,52 @@ function render(list) {
   }
 
   list.forEach(r => {
-    c.innerHTML += `
-      <div class="reservation-card">
-        <strong>Salle ${r.salle_numero}</strong>
-        <p>${r.jour} ${r.heure_debut} → ${r.heure_fin}</p>
-        <p>${r.nom} (${r.classe})</p>
-        <p>Status : <strong>${r.status}</strong></p>
-        ${
-          r.status === "pending" ? `
-          <button onclick="approve(${r.id})" class="btn-primary">✔ Valider</button>
-          <button onclick="refuse(${r.id})" class="btn-secondary">✖ Refuser</button>
-          ` : ""
-        }
-      </div>
+    const div = document.createElement("div");
+    div.className = "reservation-card";
+
+    div.innerHTML = `
+      <strong>Salle ${r.salle_numero}</strong>
+      <p>${r.jour} ${r.heure_debut} → ${r.heure_fin}</p>
+      <p>${r.nom} (${r.classe})</p>
+      <p>Status : <strong>${r.status}</strong></p>
+      ${
+        r.status === "pending" ? `
+          <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
+          <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
+        ` : ""
+      }
     `;
+
+    c.appendChild(div);
+  });
+
+  document.querySelectorAll(".approve-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      updateStatus(btn.dataset.id, "approved");
+    });
+  });
+
+  document.querySelectorAll(".refuse-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      updateStatus(btn.dataset.id, "refused");
+    });
   });
 }
 
-window.approve = id => updateStatus(id, "approved");
-window.refuse = id => updateStatus(id, "refused");
-
-el("filterStatus").onchange = applyFilters;
-el("filterSalle").onchange = applyFilters;
-el("filterDate").onchange = applyFilters;
-el("filterReset").onclick = () => {
+/* ========== FILTRES ========== */
+el("filterStatus").addEventListener("change", applyFilters);
+el("filterSalle").addEventListener("change", applyFilters);
+el("filterDate").addEventListener("change", applyFilters);
+el("filterReset").addEventListener("click", () => {
   el("filterStatus").value = "all";
   el("filterSalle").value = "all";
   el("filterDate").value = "";
   applyFilters();
-};
+});
 
 });
 </script>
+
 
 </body>
 </html>
