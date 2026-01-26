@@ -24,13 +24,30 @@ body {
 .header {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  padding: 3rem 1rem;
+  padding: 2.5rem 1rem;
   text-align: center;
 }
 
-/* CONTENU */
+.header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.header p {
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+}
+
+/* PAGE */
 .page {
-  padding: 1.5rem 1rem;
+  padding: 1.2rem;
+}
+
+/* GRID ACCUEIL */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
 }
 
 /* CARDS */
@@ -39,10 +56,26 @@ body {
   border-radius: 14px;
   padding: 1.4rem 1rem;
   text-align: center;
+  text-decoration: none;
+  color: var(--secondary);
   border: 1px solid var(--accent);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
+.card span {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--primary);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* FOOTER */
 .footer {
   text-align: center;
   font-size: 0.75rem;
@@ -50,7 +83,7 @@ body {
   padding: 1rem;
 }
 
-/* NAV */
+/* NAV BASSE */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -61,6 +94,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  z-index: 100;
 }
 
 .nav-item {
@@ -72,11 +106,15 @@ body {
   font-size: 0.7rem;
 }
 
+.nav-item span {
+  font-size: 1.4rem;
+}
+
 .nav-item.active {
   color: var(--primary);
 }
 
-/* FORM */
+/* FORMULAIRES */
 .contact-form {
   display: flex;
   flex-direction: column;
@@ -92,7 +130,7 @@ body {
 .contact-form textarea {
   width: 100%;
   padding: 0.7rem;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--accent);
 }
 
@@ -101,7 +139,7 @@ body {
 }
 
 /* =========================
-   PLANNING
+   PLANNING SALLE
 ========================= */
 
 .planning-toolbar {
@@ -166,7 +204,7 @@ body {
 .legend.ferme      { background: #9ca3af; }
 
 /* ===========================
-   📱 MOBILE = VUE JOUR
+   MOBILE = VUE JOUR
 =========================== */
 @media (max-width: 768px) {
 
@@ -175,9 +213,8 @@ body {
     font-size: 12px;
   }
 
-  /* cacher les jours non actifs */
-  .planning-header:not(.day-active),
-  .planning-cell:not(.day-active) {
+  body.day-view .planning-header:not(.day-active),
+  body.day-view .planning-cell:not(.day-active) {
     display: none;
   }
 
@@ -192,9 +229,17 @@ body {
   #viewWeek {
     display: none;
   }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
 }
 
-/* clic seulement sur dispo */
+/* clic uniquement sur dispo */
 .planning-cell:not(.disponible) {
   pointer-events: none;
   opacity: 0.9;
