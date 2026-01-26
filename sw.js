@@ -1,3 +1,5 @@
+const CACHE_NAME = "psh-admin-v3";
+
 self.addEventListener("install", event => {
   console.log("✅ Service Worker installé");
   self.skipWaiting();
@@ -5,9 +7,26 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
   console.log("🚀 Service Worker activé");
-  event.waitUntil(self.clients.claim());
+
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(k => {
+          if (k !== CACHE_NAME) return caches.delete(k);
+        })
+      )
+    )
+  );
+
+  self.clients.claim();
 });
 
+/* ⚠️ PAS DE CACHE POUR LE JS / HTML */
+self.addEventListener("fetch", event => {
+  event.respondWith(fetch(event.request));
+});
+
+/* ===== PUSH ===== */
 self.addEventListener("push", event => {
   let data = {};
 
@@ -41,14 +60,4 @@ self.addEventListener("notificationclick", event => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
-      for (const client of clientList) {
-        if (client.url === url && "focus" in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(url);
-      }
-    })
-  );
-});
+      for (const cli
