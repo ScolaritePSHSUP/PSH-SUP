@@ -136,25 +136,13 @@ body {
 .planning-cell {
   border: 1px solid #e5e7eb;
   min-height: 32px;
-  cursor: pointer;
 }
 
 /* COULEURS */
-.planning-cell.disponible {
-  background-color: #22c55e;
-}
-
-.planning-cell.reserve {
-  background-color: #ef4444;
-}
-
-.planning-cell.pending {
-  background-color: #f59e0b;
-}
-
-.planning-cell.ferme {
-  background-color: #9ca3af;
-}
+.planning-cell.disponible { background: #22c55e; cursor: pointer; }
+.planning-cell.reserve    { background: #ef4444; }
+.planning-cell.pending    { background: #f59e0b; }
+.planning-cell.ferme      { background: #9ca3af; }
 
 /* LÉGENDE */
 .planning-legend {
@@ -173,13 +161,12 @@ body {
 }
 
 .legend.disponible { background: #22c55e; }
-.legend.reserve { background: #ef4444; }
-.legend.pending { background: #f59e0b; }
-.legend.ferme { background: #9ca3af; }
-
+.legend.reserve    { background: #ef4444; }
+.legend.pending    { background: #f59e0b; }
+.legend.ferme      { background: #9ca3af; }
 
 /* ===========================
-   📱 MODE MOBILE = VUE JOUR
+   📱 MOBILE = VUE JOUR
 =========================== */
 @media (max-width: 768px) {
 
@@ -188,13 +175,12 @@ body {
     font-size: 12px;
   }
 
-  /* on cache seulement les jours non actifs */
-  body.day-view .planning-header:not(.day-active),
-  body.day-view .planning-cell:not(.day-active) {
+  /* cacher les jours non actifs */
+  .planning-header:not(.day-active),
+  .planning-cell:not(.day-active) {
     display: none;
   }
 
-  /* on garde la colonne des heures */
   .planning-hour {
     display: block;
   }
@@ -208,12 +194,8 @@ body {
   }
 }
 
-/* clic uniquement sur vert */
-.planning-cell.disponible {
-  cursor: pointer;
-}
-
+/* clic seulement sur dispo */
 .planning-cell:not(.disponible) {
   pointer-events: none;
-  opacity: 0.85;
+  opacity: 0.9;
 }
