@@ -177,18 +177,43 @@ body {
 .legend.pending { background: #f59e0b; }
 .legend.ferme { background: #9ca3af; }
 
-/* MOBILE */
+
+/* ===========================
+   📱 MODE MOBILE = VUE JOUR
+=========================== */
 @media (max-width: 768px) {
+
   .planning-grid {
-    grid-template-columns: 60px repeat(5, 100px);
-    font-size: 11px;
+    grid-template-columns: 60px 1fr;
+    font-size: 12px;
+  }
+
+  /* on cache seulement les jours non actifs */
+  body.day-view .planning-header:not(.day-active),
+  body.day-view .planning-cell:not(.day-active) {
+    display: none;
+  }
+
+  /* on garde la colonne des heures */
+  .planning-hour {
+    display: block;
+  }
+
+  .planning-cell {
+    min-height: 36px;
   }
 
   #viewWeek {
     display: none;
   }
+}
 
-  .form-row {
-    flex-direction: column;
-  }
+/* clic uniquement sur vert */
+.planning-cell.disponible {
+  cursor: pointer;
+}
+
+.planning-cell:not(.disponible) {
+  pointer-events: none;
+  opacity: 0.85;
 }
