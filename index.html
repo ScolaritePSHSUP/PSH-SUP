@@ -166,6 +166,40 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
     console.error(err);
   }
 });
+
+/* ===============================
+   📲 INSTALL PWA (PUBLIC)
+=============================== */
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+// Si déjà installé → on cache le bouton
+if (window.matchMedia("(display-mode: standalone)").matches) {
+  installBtn.hidden = true;
+}
+
+// Chrome / Android : déclenchement install
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.hidden = false;
+});
+
+// Clic bouton
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.hidden = true;
+});
+
+// Après installation
+window.addEventListener("appinstalled", () => {
+  installBtn.hidden = true;
+  console.log("✅ PWA installée");
+});
+
 </script>
 
 
