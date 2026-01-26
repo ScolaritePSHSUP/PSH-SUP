@@ -24,10 +24,7 @@
   <!-- BARRE PLANNING -->
   <div class="planning-toolbar">
     <button id="prevWeek" class="btn-secondary">⬅️</button>
-    <button id="viewWeek" class="btn-secondary active">📅 Semaine</button>
-    <button id="viewDay" class="btn-secondary">📆 Jour</button>
     <button id="nextWeek" class="btn-secondary">➡️</button>
-    <input type="date" id="dayPicker" style="display:none;">
   </div>
 
   <section class="card">
@@ -128,7 +125,8 @@ function getWeekRange(offset) {
 }
 
 async function loadSalleInfos() {
-  const { data } = await supabaseClient.from("salles").select("*").eq("numero", salleNumero).single();
+  const { data } = await supabaseClient.from("salles")
+    .select("*").eq("numero", salleNumero).single();
   if (!data) return;
   document.getElementById("salleInfos").innerHTML =
     "📍 Campus : <strong>"+data.campus+"</strong><br>👥 Capacité : <strong>"+data.capacite+"</strong>";
@@ -141,7 +139,7 @@ function renderPlanning(monday) {
   jours.forEach((j,i)=>{
     const d = new Date(monday);
     d.setDate(d.getDate()+i);
-    grid.innerHTML += `<div class="planning-header day-active">${j.label}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
+    grid.innerHTML += `<div class="planning-header">${j.label}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
   });
 
   heures.forEach(h=>{
@@ -194,6 +192,46 @@ document.getElementById("prevWeek").onclick=()=>{weekOffset--;loadPlanningVisuel
 
 loadSalleInfos();
 loadPlanningVisuel();
+
+/* ====== RÉSERVATION ====== */
+const form = document.getElementById("reservationForm");
+form.addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const msg = document.getElementById("reservationMessage");
+
+  const nom = document.getElementById("nom").value.trim();
+  const classe = document.getElementById("classe").value.trim();
+  const jour = document.getElementById("jour").value;
+  const heure_debut = document.getElementById("heureDebut").value;
+  const heure_fin = document.getElementById("heureFin").value;
+  const email = document.getElementById("email").value.trim();
+  const motif = document.getElementById("motif").value.trim();
+
+  const { error } = await supabaseClient.from("reservations_salles").insert([{
+    salle_numero: parseInt(salleNumero,10),
+    nom,
+    classe,
+    jour,
+    heure_debut,
+    heure_fin,
+    email,
+    motif,
+    status: "pending"
+  }]);
+
+  if(error){
+    console.error(error);
+    msg.textContent = "❌ Erreur lors de l’envoi";
+    msg.style.color = "red";
+    return;
+  }
+
+  msg.textContent = "✅ Demande envoyée";
+  msg.style.color = "green";
+  form.reset();
+  loadPlanningVisuel();
+});
 </script>
 
 </body>
