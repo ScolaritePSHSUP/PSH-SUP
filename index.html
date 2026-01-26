@@ -139,6 +139,17 @@ document.getElementById("btnBDE").addEventListener("click", () => {
 });
 
 
+
+await supabaseClient
+  .from("push_subscriptions")
+  .upsert({
+    audience: "public",
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth
+  }, { onConflict: "endpoint" });
+
+
 /* ===============================
    🔧 SERVICE WORKER
 =============================== */
