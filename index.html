@@ -151,21 +151,28 @@ if ("serviceWorker" in navigator) {
 /* ===============================
    🔔 BOUTON NOTIFICATIONS PUBLIC
 =============================== */
-const btn = document.getElementById("enablePushPublic");
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-btn.addEventListener("click", async () => {
-  if (!("serviceWorker" in navigator)) {
-    alert("Navigateur incompatible avec les notifications");
-    return;
-  }
+const VAPID_PUBLIC_KEY = "BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo";
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+document.getElementById("enablePushPublic").addEventListener("click", async () => {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
     alert("Notifications refusées");
     return;
   }
 
-  const reg = await navigator.serviceWorker.ready;
+  const reg = await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.ready;
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -177,18 +184,14 @@ btn.addEventListener("click", async () => {
 
   const json = sub.toJSON();
 
-  await supabaseClient
-    .from("push_subscriptions")
-    .upsert({
-      audience: "public",
-      endpoint: json.endpoint,
-      p256dh: json.keys.p256dh,
-      auth: json.keys.auth
-    }, {
-      onConflict: "endpoint"
-    });
+  await supabaseClient.from("push_subscriptions").upsert({
+    audience: "public",
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth
+  }, { onConflict: "endpoint" });
 
-  alert("✅ Notifications activées pour les actus et événements !");
+  alert("✅ Notifications PUBLIC activées");
 });
 </script>
 
