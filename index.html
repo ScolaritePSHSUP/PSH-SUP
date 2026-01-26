@@ -107,6 +107,12 @@
   📲 Installer l’application
 </button>
 
+<p id="iosInstallHint" class="ios-install-hint" style="display:none;">
+  📱 Sur iPhone :  
+  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
+</p>
+
+
 <!-- BOUTONS FLOTTANTS
 <button id="btnReservation" class="btn-floating btn-reservation">🗓️</button>
 <button id="btnContact" class="btn-floating btn-contact">✉️</button>  -->
@@ -199,6 +205,19 @@ window.addEventListener("appinstalled", () => {
   installBtn.hidden = true;
   console.log("✅ PWA installée");
 });
+
+/* ===============================
+   🍏 iOS INSTALL MESSAGE
+=============================== */
+const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+const isInStandaloneMode = window.navigator.standalone === true;
+
+const iosHint = document.getElementById("iosInstallHint");
+
+if (isIos && !isInStandaloneMode) {
+  iosHint.style.display = "block";
+}
+
 
 </script>
 
