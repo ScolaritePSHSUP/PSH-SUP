@@ -161,12 +161,22 @@ function renderPlanning(monday) {
           classe="ferme";
       });
 
-      lastReservations.forEach(r=>{
-        if(r.jour === iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5))
-          classe = r.status === "approved" ? "reserve" : "pending";
-      });
+      let label = "";
 
-      grid.innerHTML += `<div class="planning-cell ${classe}" data-date="${iso}" data-heure="${h}"></div>`;
+lastReservations.forEach(r=>{
+  if(r.jour === iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5)) {
+    classe = r.status === "approved" ? "reserve" : "pending";
+    label = r.nom; // 👈 NOM affiché
+  }
+});
+
+
+      grid.innerHTML += `
+  <div class="planning-cell ${classe}" data-date="${iso}" data-heure="${h}">
+    ${label ? `<small>${label}</small>` : ""}
+  </div>
+`;
+
     });
   });
 

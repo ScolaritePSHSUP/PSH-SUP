@@ -560,3 +560,11 @@ a.card *,
 a.reservation-card * {
   pointer-events: auto;
 }
+.planning-cell small {
+  font-size: 0.6rem;
+  color: white;
+  display: block;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+}
