@@ -544,7 +544,7 @@ body.day-view .planning-grid {
   font-size: 0.7rem;
 }
 
-/* ✅ Les liens "carte" doivent être cliquables sur toute la surface */
+/* ✅ Les liens "carte" doivent être cliquables */
 a.card,
 a.reservation-card {
   display: block;
@@ -553,8 +553,17 @@ a.reservation-card {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ✅ Evite les comportements bizarres iOS/PWA */
-a.card * ,
-a.reservation-card * {
-  pointer-events: none;
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: block;
+}
+
+.card .status-badge {
+  display: inline-block;
+  margin-top: 0.5rem;
 }
