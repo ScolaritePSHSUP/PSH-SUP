@@ -158,40 +158,27 @@ function render(list) {
   }
 
   list.forEach(r => {
-    const status = r.status || "pending"; // ⭐ FALLBACK ICI
+    const status = r.status || "pending";
 
     const div = document.createElement("div");
     div.className = "reservation-card";
+    div.style.cursor = "pointer";
 
     div.innerHTML = `
       <strong>Salle ${r.salle_numero}</strong>
       <p>📅 ${r.jour} ⏰ ${r.heure_debut} → ${r.heure_fin}</p>
       <p>👤 ${r.nom} (${r.classe})</p>
       <p>Status : <strong>${status}</strong></p>
-
-      ${
-        status === "pending" ? `
-          <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
-          <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
-        ` : ""
-      }
     `;
+
+    div.addEventListener("click", () => {
+      window.location.href = "admin-reservation.html?id=" + r.id;
+    });
 
     c.appendChild(div);
   });
-
-  document.querySelectorAll(".approve-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      updateStatus(btn.dataset.id, "approved");
-    });
-  });
-
-  document.querySelectorAll(".refuse-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      updateStatus(btn.dataset.id, "refused");
-    });
-  });
 }
+
 
 /* ========== FILTRES ========== */
 el("filterStatus").addEventListener("change", applyFilters);
