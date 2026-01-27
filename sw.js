@@ -61,3 +61,7 @@ self.addEventListener("notificationclick", event => {
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
       for (const cli
+	  
+self.addEventListener("fetch", event => {
+  event.respondWith(fetch(event.request));
+});
