@@ -149,7 +149,9 @@ function applyFilters() {
 }
 
 async function updateStatus(id, status) {
-  await supabaseClient
+  alert("CLICK : " + id + " → " + status);
+
+  const { error } = await supabaseClient
     .from("reservations_salles")
     .update({
       status,
@@ -157,8 +159,15 @@ async function updateStatus(id, status) {
     })
     .eq("id", id);
 
+  if (error) {
+    alert("ERREUR SUPABASE : " + error.message);
+  } else {
+    alert("UPDATE OK");
+  }
+
   loadReservations();
 }
+
 
 function render(list) {
   const c = el("reservationsList");
