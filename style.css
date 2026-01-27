@@ -469,3 +469,15 @@ body.day-view .planning-grid {
 .reservation-card button {
   width: 100%;
 }
+.back-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1rem;
+}
+
+@media (max-width: 480px) {
+  .back-btn-wrapper .btn-secondary {
+    width: auto;        /* au lieu de 100% */
+    padding: 0.7rem 1rem;
+  }
+}

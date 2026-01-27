@@ -15,9 +15,10 @@
   <p>Validation et gestion des demandes</p>
 </header>
 
-<center>
+<div class="back-btn-wrapper">
   <a href="admin.html" class="btn-secondary">⬅ Retour dashboard</a>
-</center>
+</div>
+
 
 <center style="margin-top:1rem;">
   <button id="enablePush" class="btn-primary">🔔 Activer les notifications</button>
@@ -56,6 +57,7 @@ const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* ================= AUTH ================= */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session || data.session.user.user_metadata.role !== "admin") {
@@ -101,22 +103,36 @@ function urlBase64ToUint8Array(base64String) {
 const el = id => document.getElementById(id);
 let allReservations = [];
 
+/* ===== NORMALISATION STATUT ===== */
+function normalizeStatus(r) {
+  if (r.status) return r.status;
+  const s = (r.statut || "").toLowerCase();
+  if (s.includes("valid")) return "approved";
+  if (s.includes("refus")) return "refused";
+  return "pending";
+}
+
 async function loadReservations() {
   const { data } = await supabaseClient
     .from("reservations_salles")
     .select("*")
     .order("created_at", { ascending: false });
 
-  allReservations = data || [];
+  allReservations = (data || []).map(r => ({
+    ...r,
+    _status: normalizeStatus(r)
+  }));
+
   fillSalleFilter();
   applyFilters();
 }
 
 function fillSalleFilter() {
   const select = el("filterSalle");
-  const salles = [...new Set(allReservations.map(r => r.salle_numero))];
-  select.innerHTML = `<option value="all">Toutes</option>` +
-    salles.map(s => `<option value="${s}">${s}</option>`).join("");
+  const salles = [...new Set(allReservations.map(r => String(r.salle_numero)))];
+  select.innerHTML =
+    `<option value="all">Toutes</option>` +
+    salles.map(s => `<option value="${s}">Salle ${s}</option>`).join("");
 }
 
 function applyFilters() {
@@ -125,8 +141,8 @@ function applyFilters() {
   const salle = el("filterSalle").value;
   const date = el("filterDate").value;
 
-  if (s !== "all") list = list.filter(r => r.status === s);
-  if (salle !== "all") list = list.filter(r => r.salle_numero == salle);
+  if (s !== "all") list = list.filter(r => r._status === s);
+  if (salle !== "all") list = list.filter(r => String(r.salle_numero) === salle);
   if (date) list = list.filter(r => r.jour === date);
 
   render(list);
@@ -135,7 +151,10 @@ function applyFilters() {
 async function updateStatus(id, status) {
   await supabaseClient
     .from("reservations_salles")
-    .update({ status })
+    .update({
+      status,
+      statut: status === "approved" ? "Validée" : "Refusée"
+    })
     .eq("id", id);
 
   loadReservations();
@@ -156,17 +175,16 @@ function render(list) {
 
     div.innerHTML = `
       <strong>Salle ${r.salle_numero}</strong>
-      <p>${r.jour} ${r.heure_debut} → ${r.heure_fin}</p>
-      <p>${r.nom} (${r.classe})</p>
-      <p>Status : <strong>${r.status}</strong></p>
+      <p>📅 ${r.jour} ⏰ ${r.heure_debut} → ${r.heure_fin}</p>
+      <p>👤 ${r.nom} (${r.classe})</p>
+      <p>Status : <strong>${r._status}</strong></p>
+
       ${
-  true ? `
-    <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
-    <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
-  ` : ""
-}
-
-
+        r._status === "pending" ? `
+          <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
+          <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
+        ` : ""
+      }
     `;
 
     c.appendChild(div);
@@ -198,6 +216,7 @@ el("filterReset").addEventListener("click", () => {
 
 });
 </script>
+
 
 
 </body>
