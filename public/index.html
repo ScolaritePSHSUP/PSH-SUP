@@ -18,24 +18,20 @@
   <!-- Manifest -->
   <link rel="manifest" href="/PSH-SUP/public/manifest-public.json">
 
-
   <!-- Icons -->
   <link rel="apple-touch-icon" href="/PSH-SUP/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/PSH-SUP/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/PSH-SUP/icons/icon-512.png">
 
-  <!-- iOS Splash fix -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
   <!-- Styles -->
-  <link rel="stylesheet" href="/PSH-SUP/style.css">
+  <link rel="stylesheet" href="/PSH-SUP/public/style.css">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <h1>PSH SUP</h1>
   <p>Vie du campus & services</p>
@@ -47,15 +43,15 @@
 
 <center>
   <button id="installBtn" class="btn-primary install-btn" style="display:none;">
-  📲 Installer l’application
-</button>
+    📲 Installer l’application
+  </button>
 
-<p id="iosInstallHint" class="ios-install-hint" style="display:none;">
-  📱 Sur iPhone :  
-  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
-</p>
+  <p id="iosInstallHint" class="ios-install-hint" style="display:none;">
+    📱 Sur iPhone :  
+    <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
+  </p>
+</center>
 
-<!-- CONTENU -->
 <main class="page">
   <div class="grid">
 
@@ -80,17 +76,12 @@
     </a>
 
   </div>
-  
-
-
 </main>
 
-<!-- FOOTER -->
 <footer class="footer">
   © PSH SUP – Vie du campus – 2026
 </footer>
 
-<!-- NAVIGATION BASSE -->
 <nav class="bottom-nav">
   <a href="index.html" class="nav-item active">
     <span>🏠</span><small>Accueil</small>
@@ -104,21 +95,13 @@
   <a href="salles.html" class="nav-item">
     <span>🏫</span><small>Salles</small>
   </a>
-    <a href="contact-admin.html" class="nav-item">
-      <span>🏢</span><small>Administration</small>
-    </a>
+  <a href="contact-admin.html" class="nav-item">
+    <span>🏢</span><small>Administration</small>
+  </a>
 </nav>
 
-
-
-
-<!-- BOUTONS FLOTTANTS
-<button id="btnReservation" class="btn-floating btn-reservation">🗓️</button>
-<button id="btnContact" class="btn-floating btn-contact">✉️</button>  -->
 <button id="btnBDE" class="btn-floating btn-bde" aria-label="Votre BDE">🎉</button>
 
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
@@ -133,6 +116,18 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
+/* ===============================
+   ⚙️ SERVICE WORKER (PUBLIC)
+=============================== */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/PSH-SUP/public/sw-public.js")
+    .then(() => console.log("✅ SW public enregistré"))
+    .catch(err => console.error("❌ SW error", err));
+}
+
+/* ===============================
+   🔔 PUSH NOTIFS
+=============================== */
 document.getElementById("enablePushPublic").addEventListener("click", async () => {
   try {
     const permission = await Notification.requestPermission();
@@ -141,8 +136,7 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
       return;
     }
 
-    const reg = await navigator.serviceWorker.register("/PSH-SUP/public/sw-public.js");
-    await navigator.serviceWorker.ready;
+    const reg = await navigator.serviceWorker.ready;
 
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -164,8 +158,6 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
       }, { onConflict: "endpoint" });
 
     alert("✅ Notifications PUBLIC activées !");
-    console.log(json);
-
   } catch (err) {
     alert("❌ ERREUR : " + err.message);
     console.error(err);
@@ -205,26 +197,12 @@ window.addEventListener("appinstalled", () => {
 =============================== */
 const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 const isInStandaloneMode = window.navigator.standalone === true;
-
 const iosHint = document.getElementById("iosInstallHint");
 
 if (isIos && !isInStandaloneMode) {
   iosHint.style.display = "block";
 }
-
-/* ===============================
-   ⚙️ SERVICE WORKER (PUBLIC)
-=============================== */
-(async () => {
-  if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/PSH-SUP/public/sw-public.js");
-    console.log("✅ SW public enregistré");
-  }
-})();
-
-
 </script>
-
 
 </body>
 </html>
