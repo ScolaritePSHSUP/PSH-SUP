@@ -2,11 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Détail réservation</title>
+  <title>PSH SUP – Détail réservation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css?v=2">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
 <header class="header">
@@ -24,6 +25,8 @@
   </section>
 </main>
 
+<footer class="footer">© PSH SUP – Administration – 2026</footer>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -39,7 +42,7 @@ if (!reservationId) {
   return;
 }
 
-/* AUTH */
+/* ================= AUTH ================= */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session || data.session.user.user_metadata.role !== "admin") {
@@ -57,7 +60,8 @@ async function loadReservation() {
     .single();
 
   if (error || !data) {
-    document.getElementById("reservationDetail").innerHTML = "<p>Erreur de chargement.</p>";
+    document.getElementById("reservationDetail").innerHTML =
+      "<p>Erreur lors du chargement de la réservation.</p>";
     return;
   }
 
@@ -65,11 +69,11 @@ async function loadReservation() {
 
   document.getElementById("reservationDetail").innerHTML = `
     <strong>Salle ${data.salle_numero}</strong>
-    <p>📅 ${data.jour}</p>
-    <p>⏰ ${data.heure_debut} → ${data.heure_fin}</p>
-    <p>👤 ${data.nom}</p>
+    <p>📅 Date : ${data.jour}</p>
+    <p>⏰ Heure : ${data.heure_debut} → ${data.heure_fin}</p>
+    <p>👤 Nom : ${data.nom}</p>
     <p>Classe : ${data.classe}</p>
-    <p>Email : ${data.email}</p>
+    <p>Email : ${data.email || "-"}</p>
     <p>Motif : ${data.motif || "-"}</p>
     <p>Status : <strong>${status}</strong></p>
 
@@ -77,13 +81,24 @@ async function loadReservation() {
       status === "pending" ? `
         <button id="approveBtn" class="btn-primary">✔ Valider</button>
         <button id="refuseBtn" class="btn-secondary">✖ Refuser</button>
-      ` : `<p>Cette réservation est déjà traitée.</p>`
+      ` : `
+        <p>Cette réservation est déjà traitée.</p>
+      `
     }
   `;
 
   if (status === "pending") {
-    document.getElementById("approveBtn").onclick = () => updateStatus("approved");
-    document.getElementById("refuseBtn").onclick = () => updateStatus("refused");
+    document.getElementById("approveBtn").addEventListener("click", () => {
+      if (confirm("Confirmer la validation de cette réservation ?")) {
+        updateStatus("approved");
+      }
+    });
+
+    document.getElementById("refuseBtn").addEventListener("click", () => {
+      if (confirm("Confirmer le refus de cette réservation ?")) {
+        updateStatus("refused");
+      }
+    });
   }
 }
 
@@ -94,7 +109,7 @@ async function updateStatus(newStatus) {
     .eq("id", reservationId);
 
   if (error) {
-    alert("Erreur : " + error.message);
+    alert("Erreur Supabase : " + error.message);
   } else {
     alert("Réservation mise à jour");
     window.location.href = "admin-reservations.html";
