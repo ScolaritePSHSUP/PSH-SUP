@@ -87,14 +87,7 @@ const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
-/* ===============================
-   🔒 AUTH GUARD
-=============================== */
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (!data.session) {
-    window.location.href = "login.html";
-  }
-});
+
 /* ===============================
    🏫 CHARGER LES SALLES
 =============================== */

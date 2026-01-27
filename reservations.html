@@ -143,15 +143,6 @@ const supabaseClient = supabase.createClient(
   }
 );
 
-/* ===============================
-   🔒 PROTECTION ADMIN
-=============================== */
-(async () => {
-  const { data } = await supabaseClient.auth.getSession();
-  if (!data.session || data.session.user.user_metadata.role !== "admin") {
-    window.location.href = "admin-login.html";
-  }
-})();
 
 /* ===============================
    🧠 ÉTAT GLOBAL
