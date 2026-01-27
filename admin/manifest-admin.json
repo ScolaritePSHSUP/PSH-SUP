@@ -1,0 +1,21 @@
+{
+  "name": "PSH SUP – Administration",
+  "short_name": "PSH Admin",
+  "start_url": "/PSH-SUP/admin/admin.html",
+  "scope": "/PSH-SUP/admin/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#b23a2c",
+  "icons": [
+    {
+      "src": "/PSH-SUP/icons/admin/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/PSH-SUP/icons/admin/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
