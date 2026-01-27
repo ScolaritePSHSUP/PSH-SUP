@@ -1,33 +1,39 @@
-const CACHE_NAME = "psh-admin-v3";
+/* sw.js — PSH SUP ADMIN
+   - Pas de cache HTML/JS (toujours network)
+   - Nettoyage des anciens caches
+   - Push + click notification OK
+*/
 
-self.addEventListener("install", event => {
+const CACHE_NAME = "psh-admin-v4"; // ⬅️ incrémente à chaque grosse modif
+
+self.addEventListener("install", (event) => {
   console.log("✅ Service Worker installé");
   self.skipWaiting();
 });
 
-self.addEventListener("activate", event => {
+self.addEventListener("activate", (event) => {
   console.log("🚀 Service Worker activé");
 
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(k => {
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.map((k) => {
           if (k !== CACHE_NAME) return caches.delete(k);
         })
-      )
-    )
+      );
+      await self.clients.claim();
+    })()
   );
-
-  self.clients.claim();
 });
 
-/* ⚠️ PAS DE CACHE POUR LE JS / HTML */
-self.addEventListener("fetch", event => {
+/* ✅ NETWORK ONLY : pas de cache pour HTML/JS/CSS */
+self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
 
 /* ===== PUSH ===== */
-self.addEventListener("push", event => {
+self.addEventListener("push", (event) => {
   let data = {};
 
   if (event.data) {
@@ -39,29 +45,44 @@ self.addEventListener("push", event => {
   }
 
   const title = data.title || "PSH SUP";
+  const url =
+    (data.url && typeof data.url === "string" && data.url) ||
+    "/PSH-SUP/index.html";
+
   const options = {
     body: data.body || "",
     icon: "/PSH-SUP/icons/icon-192.png",
     badge: "/PSH-SUP/icons/icon-192.png",
-    data: {
-      url: data.url || "/PSH-SUP/index.html"
-    }
+    data: { url },
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
-self.addEventListener("notificationclick", event => {
+/* ✅ CLICK NOTIF : ouvre l’URL (ou focus si déjà ouverte) */
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data.url;
+  const url =
+    (event.notification.data && event.notification.data.url) ||
+    "/PSH-SUP/index.html";
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
-      for (const cli
-	  
-self.addEventListener("fetch", event => {
-  event.respondWith(fetch(event.request));
+    (async () => {
+      const clientList = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      for (const client of clientList) {
+        // Si déjà ouvert, focus
+        if ("focus" in client && client.url && client.url.includes(url)) {
+          return client.focus();
+        }
+      }
+
+      // Sinon ouvre une nouvelle fenêtre
+      if (clients.openWindow) return clients.openWindow(url);
+    })()
+  );
 });
