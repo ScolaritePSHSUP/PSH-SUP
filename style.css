@@ -518,3 +518,29 @@ body.day-view .planning-grid {
 .status-pending  { background:#f59e0b; color:white; }
 .status-approved { background:#22c55e; color:white; }
 .status-refused  { background:#ef4444; color:white; }
+
+/* =========================
+   FIX LISTE RÉSERVATIONS
+========================= */
+
+#reservationsList {
+  text-align: left;
+}
+
+.reservation-card {
+  text-align: left;
+}
+
+/* on réduit l’icône école énorme */
+.res-salle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+}
+
+/* on évite les gros titres rouges */
+.status-badge {
+  font-size: 0.7rem;
+}
+
