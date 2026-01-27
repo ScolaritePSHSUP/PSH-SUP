@@ -1,0 +1,13 @@
+{
+  "name": "PSH SUP",
+  "short_name": "PSH SUP",
+  "start_url": "/PSH-SUP/index.html",
+  "scope": "/PSH-SUP/",
+  "display": "standalone",
+  "background_color": "#b23a2c",
+  "theme_color": "#b23a2c",
+  "icons": [
+    { "src": "/PSH-SUP/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/PSH-SUP/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
