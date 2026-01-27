@@ -140,7 +140,7 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
       return;
     }
 
-    const reg = await navigator.serviceWorker.register("/PSH-SUP/public/sw.js");
+    const reg = await navigator.serviceWorker.register("/PSH-SUP/public/sw-public.js");
     await navigator.serviceWorker.ready;
 
     let sub = await reg.pushManager.getSubscription();
@@ -216,7 +216,7 @@ if (isIos && !isInStandaloneMode) {
 =============================== */
 (async () => {
   if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/PSH-SUP/public/sw.js");
+    await navigator.serviceWorker.register("/PSH-SUP/public/sw-public.js");
     console.log("✅ SW public enregistré");
   }
 })();
