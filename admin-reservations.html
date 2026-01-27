@@ -109,29 +109,30 @@ function render(list) {
   list.forEach(r => {
     const status = r.status || "pending";
 
-    const a = document.createElement("a");
-    a.href = "admin-reservation.html?id=" + r.id;
-    a.className = "reservation-card";
-    a.style.textDecoration = "none";
-    a.style.color = "inherit";
+    const label =
+      status === "pending" ? "En attente" :
+      status === "approved" ? "Validée" :
+      "Refusée";
 
-    a.innerHTML = `
-      <div class="res-header">
-        <span class="res-salle">🏫 Salle ${r.salle_numero}</span>
-        <span class="status-badge status-${status}">
-          ${status === "pending" ? "En attente" :
-            status === "approved" ? "Validée" : "Refusée"}
-        </span>
-      </div>
+    c.innerHTML += `
+      <a href="admin-reservation.html?id=${r.id}" class="reservation-card">
 
-      <div class="res-row">📅 ${r.jour}</div>
-      <div class="res-row">⏰ ${r.heure_debut} → ${r.heure_fin}</div>
-      <div class="res-row">👤 ${r.nom} (${r.classe})</div>
+        <div class="res-header">
+          <span class="res-salle">Salle ${r.salle_numero}</span>
+          <span class="status-badge status-${status}">
+            ${label}
+          </span>
+        </div>
+
+        <div class="res-row">📅 ${r.jour}</div>
+        <div class="res-row">⏰ ${r.heure_debut} → ${r.heure_fin}</div>
+        <div class="res-row">👤 ${r.nom} (${r.classe})</div>
+
+      </a>
     `;
-
-    c.appendChild(a);
   });
 }
+
 
 /* ===== FILTRES ===== */
 el("filterStatus").addEventListener("change", applyFilters);
