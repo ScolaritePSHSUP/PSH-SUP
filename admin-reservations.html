@@ -149,20 +149,24 @@ function applyFilters() {
 }
 
 async function updateStatus(id, status) {
-  alert("CLICK : " + id + " → " + status);
+  console.log("UPDATE:", id, status);
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("reservations_salles")
     .update({
-      status,
+      status: status,
       statut: status === "approved" ? "Validée" : "Refusée"
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
+
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
 
   if (error) {
-    alert("ERREUR SUPABASE : " + error.message);
+    alert("ERREUR: " + error.message);
   } else {
-    alert("UPDATE OK");
+    alert("OK");
   }
 
   loadReservations();
