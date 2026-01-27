@@ -36,9 +36,10 @@
 </header>
 
 <center>
-  <button id="installPWA" class="btn-secondary" style="display:none;">
-    📲 Installer l’application
-  </button>
+  <button id="installBtn" class="btn-primary install-btn" style="display:none;">
+  📲 Installer l’application
+</button>
+
 </center>
 
 <main class="page">
@@ -118,7 +119,7 @@ const supabaseClient = supabase.createClient(
    📲 INSTALL PWA
 =============================== */
 let deferredPrompt;
-const installBtn = document.getElementById("installPWA");
+const installBtn = document.getElementById("installBtn");
 
 if (window.matchMedia("(display-mode: standalone)").matches) {
   installBtn.style.display = "none";
@@ -142,6 +143,7 @@ window.addEventListener("appinstalled", () => {
   installBtn.style.display = "none";
 });
 
+
 /* ===============================
    🚪 LOGOUT
 =============================== */
@@ -155,7 +157,7 @@ document.getElementById("logout").addEventListener("click", async () => {
 =============================== */
 (async () => {
   if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/PSH-SUP-ADMIN/admin-sw.js");
+    await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw-v2.js");
     console.log("✅ SW admin enregistré");
   }
 

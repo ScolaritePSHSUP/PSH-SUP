@@ -142,7 +142,7 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
       return;
     }
 
-    const reg = await navigator.serviceWorker.register("/PSH-SUP/sw.js");
+    const reg = await navigator.serviceWorker.register("/PSH-SUP/sw-v2.js");
     await navigator.serviceWorker.ready;
 
     let sub = await reg.pushManager.getSubscription();
