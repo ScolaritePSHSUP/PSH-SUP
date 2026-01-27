@@ -105,14 +105,6 @@ for (let h = 8; h < 20; h++) {
   heures.push(String(h).padStart(2,"0")+":30");
 }
 
-/* ✅ DATE LOCALE (PAS UTC) */
-function toLocalISO(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 function getMonday(d) {
   d = new Date(d);
   const day = d.getDay() || 7;
@@ -126,18 +118,24 @@ function getWeekRange(offset) {
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   return {
-    start: toLocalISO(monday),
-    end: toLocalISO(sunday),
+    start: monday.toISOString().split("T")[0],
+    end: sunday.toISOString().split("T")[0],
     monday
   };
 }
 
 async function loadSalleInfos() {
-  const { data } = await supabaseClient.from("salles")
-    .select("*").eq("numero", salleNumero).single();
+  const { data } = await supabaseClient
+    .from("salles")
+    .select("*")
+    .eq("numero", salleNumero)
+    .single();
+
   if (!data) return;
+
   document.getElementById("salleInfos").innerHTML =
-    "📍 Campus : <strong>"+data.campus+"</strong><br>👥 Capacité : <strong>"+data.capacite+"</strong>";
+    `📍 Campus : <strong>${data.campus}</strong><br>
+     👥 Capacité : <strong>${data.capacite}</strong>`;
 }
 
 function renderPlanning(monday) {
@@ -156,7 +154,7 @@ function renderPlanning(monday) {
       let classe="disponible";
       const cellDate = new Date(monday);
       cellDate.setDate(cellDate.getDate()+i);
-      const iso = toLocalISO(cellDate);
+      const iso = cellDate.toISOString().split("T")[0];
 
       lastContraintes.forEach(c=>{
         if(c.jour_semaine===j.id && h>=c.heure_debut.slice(0,5) && h<c.heure_fin.slice(0,5))
@@ -164,8 +162,8 @@ function renderPlanning(monday) {
       });
 
       lastReservations.forEach(r=>{
-        if(r.jour===iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5))
-          classe = r.status==="approved"?"reserve":"pending";
+        if(r.jour === iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5))
+          classe = r.status === "approved" ? "reserve" : "pending";
       });
 
       grid.innerHTML += `<div class="planning-cell ${classe}" data-date="${iso}" data-heure="${h}"></div>`;
@@ -183,12 +181,17 @@ function renderPlanning(monday) {
 async function loadPlanningVisuel() {
   const { start,end,monday } = getWeekRange(weekOffset);
 
-  const { data: contraintes } = await supabaseClient.from("salles_contraintes")
-    .select("*").eq("salle_numero", salleNumero);
+  const { data: contraintes } = await supabaseClient
+    .from("salles_contraintes")
+    .select("*")
+    .eq("salle_numero", salleNumero);
 
-  const { data: reservations } = await supabaseClient.from("reservations_salles")
-    .select("*").eq("salle_numero", salleNumero)
-    .gte("jour", start).lte("jour", end);
+  const { data: reservations } = await supabaseClient
+    .from("reservations_salles")
+    .select("*")
+    .eq("salle_numero", salleNumero)
+    .gte("jour", start)
+    .lte("jour", end);
 
   lastContraintes = contraintes || [];
   lastReservations = reservations || [];
@@ -217,7 +220,7 @@ form.addEventListener("submit", async function(e){
   const motif = document.getElementById("motif").value.trim();
 
   const { error } = await supabaseClient.from("reservations_salles").insert([{
-    salle_numero: parseInt(salleNumero,10),
+    salle_numero: salleNumero, // 👈 TEXTE, PAS INT
     nom,
     classe,
     jour,
@@ -241,6 +244,7 @@ form.addEventListener("submit", async function(e){
   loadPlanningVisuel();
 });
 </script>
+
 
 </body>
 </html>
