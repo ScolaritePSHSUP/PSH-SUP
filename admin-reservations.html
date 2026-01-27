@@ -103,26 +103,13 @@ function urlBase64ToUint8Array(base64String) {
 const el = id => document.getElementById(id);
 let allReservations = [];
 
-/* ===== NORMALISATION STATUT ===== */
-function normalizeStatus(r) {
-  if (r.status) return r.status;
-  const s = (r.statut || "").toLowerCase();
-  if (s.includes("valid")) return "approved";
-  if (s.includes("refus")) return "refused";
-  return "pending";
-}
-
 async function loadReservations() {
   const { data } = await supabaseClient
     .from("reservations_salles")
     .select("*")
     .order("created_at", { ascending: false });
 
-  allReservations = (data || []).map(r => ({
-    ...r,
-    _status: normalizeStatus(r)
-  }));
-
+  allReservations = data || [];
   fillSalleFilter();
   applyFilters();
 }
@@ -141,7 +128,7 @@ function applyFilters() {
   const salle = el("filterSalle").value;
   const date = el("filterDate").value;
 
-  if (s !== "all") list = list.filter(r => r._status === s);
+  if (s !== "all") list = list.filter(r => r.status === s);
   if (salle !== "all") list = list.filter(r => String(r.salle_numero) === salle);
   if (date) list = list.filter(r => r.jour === date);
 
@@ -149,29 +136,17 @@ function applyFilters() {
 }
 
 async function updateStatus(id, status) {
-  console.log("UPDATE:", id, status);
-
-  const { data, error } = await supabaseClient
+  const { error } = await supabaseClient
     .from("reservations_salles")
-    .update({
-      status: status,
-      statut: status === "approved" ? "Validée" : "Refusée"
-    })
-    .eq("id", id)
-    .select();
-
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
+    .update({ status })
+    .eq("id", id);
 
   if (error) {
-    alert("ERREUR: " + error.message);
+    alert("Erreur Supabase : " + error.message);
   } else {
-    alert("OK");
+    loadReservations();
   }
-
-  loadReservations();
 }
-
 
 function render(list) {
   const c = el("reservationsList");
@@ -190,10 +165,10 @@ function render(list) {
       <strong>Salle ${r.salle_numero}</strong>
       <p>📅 ${r.jour} ⏰ ${r.heure_debut} → ${r.heure_fin}</p>
       <p>👤 ${r.nom} (${r.classe})</p>
-      <p>Status : <strong>${r._status}</strong></p>
+      <p>Status : <strong>${r.status}</strong></p>
 
       ${
-        r._status === "pending" ? `
+        r.status === "pending" ? `
           <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
           <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
         ` : ""
@@ -229,7 +204,6 @@ el("filterReset").addEventListener("click", () => {
 
 });
 </script>
-
 
 
 </body>
