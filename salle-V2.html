@@ -81,7 +81,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const params = new URLSearchParams(window.location.search);
-const salleNumero = parseInt(params.get("numero"), 10);
+const salleNumero = params.get("numero"); // ⚠️ STRING, PAS parseInt
 if (!salleNumero) location.href = "salles.html";
 
 document.getElementById("salleTitle").textContent = "Salle " + salleNumero;
@@ -250,16 +250,6 @@ form.addEventListener("submit", async function(e){
   form.reset();
   loadPlanningVisuel();
 });
-
-/* ===============================
-   ⚙️ SERVICE WORKER PUBLIC
-=============================== */
-(async () => {
-  if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/PSH-SUP/sw-v2.js");
-    console.log("✅ SW public enregistré (salle)");
-  }
-})();
 </script>
 
 </body>
