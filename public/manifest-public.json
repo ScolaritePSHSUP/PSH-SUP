@@ -1,0 +1,21 @@
+{
+  "name": "PSH SUP – Vie du campus",
+  "short_name": "PSH SUP",
+  "start_url": "/PSH-SUP/public/index.html",
+  "scope": "/PSH-SUP/public/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#b23a2c",
+  "icons": [
+    {
+      "src": "/PSH-SUP/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/PSH-SUP/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
