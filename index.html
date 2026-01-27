@@ -43,6 +43,16 @@
   🔔 Activer les notifications
 </button>
 
+<center>
+  <button id="installBtn" class="btn-primary install-btn" style="display:none;">
+  📲 Installer l’application
+</button>
+
+<p id="iosInstallHint" class="ios-install-hint" style="display:none;">
+  📱 Sur iPhone :  
+  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
+</p>
+
 <!-- CONTENU -->
 <main class="page">
   <div class="grid">
@@ -71,12 +81,6 @@
   
 
 
-<!-- <p class="ios-install-hint">
-  📱 Sur iPhone :  
-  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
-</p> -->
-
-
 </main>
 
 <!-- FOOTER -->
@@ -103,14 +107,7 @@
     </a>
 </nav>
 
-<button id="installBtn" class="btn-primary install-btn" hidden>
-  📲 Installer l’application
-</button>
 
-<p id="iosInstallHint" class="ios-install-hint" style="display:none;">
-  📱 Sur iPhone :  
-  <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
-</p>
 
 
 <!-- BOUTONS FLOTTANTS
@@ -174,36 +171,31 @@ document.getElementById("enablePushPublic").addEventListener("click", async () =
 });
 
 /* ===============================
-   📲 INSTALL PWA (PUBLIC)
+   📲 INSTALL PWA
 =============================== */
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
-// Si déjà installé → on cache le bouton
 if (window.matchMedia("(display-mode: standalone)").matches) {
-  installBtn.hidden = true;
+  installBtn.style.display = "none";
 }
 
-// Chrome / Android : déclenchement install
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.hidden = false;
+  installBtn.style.display = "block";
 });
 
-// Clic bouton
 installBtn.addEventListener("click", async () => {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
   deferredPrompt = null;
-  installBtn.hidden = true;
+  installBtn.style.display = "none";
 });
 
-// Après installation
 window.addEventListener("appinstalled", () => {
-  installBtn.hidden = true;
-  console.log("✅ PWA installée");
+  installBtn.style.display = "none";
 });
 
 /* ===============================
