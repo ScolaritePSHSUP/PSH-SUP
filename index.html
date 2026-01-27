@@ -210,6 +210,16 @@ if (isIos && !isInStandaloneMode) {
   iosHint.style.display = "block";
 }
 
+/* ===============================
+   ⚙️ SERVICE WORKER (PUBLIC)
+=============================== */
+(async () => {
+  if ("serviceWorker" in navigator) {
+    await navigator.serviceWorker.register("/PSH-SUP/sw-v2.js");
+    console.log("✅ SW public enregistré");
+  }
+})();
+
 
 </script>
 
