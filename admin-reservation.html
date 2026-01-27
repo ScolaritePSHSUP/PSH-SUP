@@ -37,12 +37,14 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const params = new URLSearchParams(window.location.search);
 const reservationId = params.get("id");
 
+const container = document.getElementById("reservationDetail");
+
 if (!reservationId) {
-  document.getElementById("reservationDetail").innerHTML = "<p>Réservation introuvable.</p>";
+  container.innerHTML = "<p>Réservation introuvable.</p>";
   return;
 }
 
-/* ================= AUTH ================= */
+/* ========== AUTH ========== */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session || data.session.user.user_metadata.role !== "admin") {
@@ -60,14 +62,13 @@ async function loadReservation() {
     .single();
 
   if (error || !data) {
-    document.getElementById("reservationDetail").innerHTML =
-      "<p>Erreur lors du chargement de la réservation.</p>";
+    container.innerHTML = "<p>Erreur lors du chargement de la réservation.</p>";
     return;
   }
 
   const status = data.status || "pending";
 
-  document.getElementById("reservationDetail").innerHTML = `
+  container.innerHTML = `
     <strong>Salle ${data.salle_numero}</strong>
     <p>📅 Date : ${data.jour}</p>
     <p>⏰ Heure : ${data.heure_debut} → ${data.heure_fin}</p>
@@ -82,7 +83,7 @@ async function loadReservation() {
         <button id="approveBtn" class="btn-primary">✔ Valider</button>
         <button id="refuseBtn" class="btn-secondary">✖ Refuser</button>
       ` : `
-        <p>Cette réservation est déjà traitée.</p>
+        <p style="color:#6b7280;">Cette réservation est déjà traitée.</p>
       `
     }
   `;

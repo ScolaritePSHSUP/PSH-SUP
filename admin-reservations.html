@@ -153,11 +153,16 @@ function render(list) {
     a.style.color = "inherit";
 
     a.innerHTML = `
-      <strong>Salle ${r.salle_numero}</strong>
-      <p>📅 ${r.jour} ⏰ ${r.heure_debut} → ${r.heure_fin}</p>
-      <p>👤 ${r.nom} (${r.classe})</p>
-      <p>Status : <strong>${status}</strong></p>
-    `;
+  <strong>🏫 Salle ${r.salle_numero}</strong>
+  <p>📅 ${r.jour}</p>
+  <p>⏰ ${r.heure_debut} → ${r.heure_fin}</p>
+  <p>👤 ${r.nom} (${r.classe})</p>
+  <span class="status-badge status-${status}">
+    ${status === "pending" ? "En attente" :
+      status === "approved" ? "Validée" : "Refusée"}
+  </span>
+`;
+
 
     c.appendChild(a);
   });
