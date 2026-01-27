@@ -167,12 +167,9 @@ function render(list) {
       <p>👤 ${r.nom} (${r.classe})</p>
       <p>Status : <strong>${r.status}</strong></p>
 
-      ${
-        r.status === "pending" ? `
-          <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
-          <button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
-        ` : ""
-      }
+      <button class="btn-primary approve-btn" data-id="${r.id}">✔ Valider</button>
+<button class="btn-secondary refuse-btn" data-id="${r.id}">✖ Refuser</button>
+
     `;
 
     c.appendChild(div);
