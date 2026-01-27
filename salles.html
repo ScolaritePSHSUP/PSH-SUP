@@ -63,7 +63,7 @@
   <a href="evenements.html" class="nav-item">
     <span>📅</span><small>Events</small>
   </a>
-  <a href="salles-V1.html" class="nav-item active">
+  <a href="salles.html" class="nav-item active">
     <span>🏫</span><small>Salles</small>
   </a>
   <a href="contact-admin.html" class="nav-item">
@@ -115,7 +115,7 @@ async function loadSalles() {
 
   data.forEach(salle => {
     container.innerHTML += `
-      <a href="salle-V1.html?numero=${salle.numero}" class="card">
+      <a href="salle-V2.html?numero=${salle.numero}" class="card">
         <span>🏫</span>
         <h2>Salle ${salle.numero}</h2>
         <p style="font-size:0.85rem;color:#6b7280;">
