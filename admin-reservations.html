@@ -19,10 +19,6 @@
   <a href="admin.html" class="btn-secondary">⬅ Retour dashboard</a>
 </div>
 
-<center style="margin-top:1rem;">
-  <button id="enablePush" class="btn-primary">🔔 Activer les notifications</button>
-</center>
-
 <main class="page">
   <section class="card">
     <h2>📋 Demandes de réservation</h2>
@@ -56,7 +52,7 @@ const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ========== AUTH ========== */
+/* ===== AUTH ===== */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session || data.session.user.user_metadata.role !== "admin") {
@@ -66,39 +62,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   loadReservations();
 })();
 
-/* ========== PUSH ========== */
-document.getElementById("enablePush").addEventListener("click", async () => {
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return alert("Notifications refusées");
-
-  const reg = await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw.js");
-  await navigator.serviceWorker.ready;
-
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array("BETw8tFdLbKb_40zgjvMfccOJhnZyvZiKUwKOwWa7TfFdY1EyoxWt__uTaST0_voPfOL6b38KFuJrbVyXTSSKNo")
-  });
-
-  const json = sub.toJSON();
-
-  await supabaseClient.from("push_subscriptions").upsert({
-    audience: "admin",
-    endpoint: json.endpoint,
-    p256dh: json.keys.p256dh,
-    auth: json.keys.auth
-  });
-
-  alert("✅ Notifications activées");
-});
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-}
-
-/* ========== UI ========== */
 const el = id => document.getElementById(id);
 let allReservations = [];
 
@@ -153,25 +116,24 @@ function render(list) {
     a.style.color = "inherit";
 
     a.innerHTML = `
-  <div class="res-header">
-    <span class="res-salle">🏫 Salle ${r.salle_numero}</span>
-    <span class="status-badge status-${status}">
-      ${status === "pending" ? "En attente" :
-        status === "approved" ? "Validée" : "Refusée"}
-    </span>
-  </div>
+      <div class="res-header">
+        <span class="res-salle">🏫 Salle ${r.salle_numero}</span>
+        <span class="status-badge status-${status}">
+          ${status === "pending" ? "En attente" :
+            status === "approved" ? "Validée" : "Refusée"}
+        </span>
+      </div>
 
-  <div class="res-row">📅 ${r.jour}</div>
-  <div class="res-row">⏰ ${r.heure_debut} → ${r.heure_fin}</div>
-  <div class="res-row">👤 ${r.nom} (${r.classe})</div>
-`;
-
+      <div class="res-row">📅 ${r.jour}</div>
+      <div class="res-row">⏰ ${r.heure_debut} → ${r.heure_fin}</div>
+      <div class="res-row">👤 ${r.nom} (${r.classe})</div>
+    `;
 
     c.appendChild(a);
   });
 }
 
-/* ========== FILTRES ========== */
+/* ===== FILTRES ===== */
 el("filterStatus").addEventListener("change", applyFilters);
 el("filterSalle").addEventListener("change", applyFilters);
 el("filterDate").addEventListener("change", applyFilters);

@@ -453,18 +453,7 @@ body.day-view .planning-grid {
   grid-template-columns: 60px 1fr;
 }
 
-	.reservation-card {
-  background: white;
-  border-radius: 14px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--accent);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
+	
 
 .back-btn-wrapper {
   display: flex;
@@ -478,60 +467,10 @@ body.day-view .planning-grid {
     padding: 0.7rem 1rem;
   }
 }
-.reservation-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--accent);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+/* =========================
+   CARTES RÉSERVATIONS ADMIN
+========================= */
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-
-.reservation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-}
-
-/* Ligne principale */
-.reservation-card strong {
-  font-size: 1.05rem;
-  color: var(--primary);
-}
-
-/* Infos secondaires */
-.reservation-card p {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* Badge statut */
-.status-badge {
-  align-self: flex-start;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-/* Couleurs */
-.status-pending {
-  background: #f59e0b;
-  color: white;
-}
-.status-approved {
-  background: #22c55e;
-  color: white;
-}
-.status-refused {
-  background: #ef4444;
-  color: white;
-}
 .reservation-card {
   background: #fff;
   border-radius: 14px;
@@ -544,12 +483,8 @@ body.day-view .planning-grid {
   flex-direction: column;
   gap: 0.4rem;
 
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-
-.reservation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Ligne du haut */
@@ -559,12 +494,13 @@ body.day-view .planning-grid {
   align-items: center;
 }
 
+/* Salle */
 .res-salle {
   font-weight: bold;
   color: var(--primary);
 }
 
-/* Lignes info */
+/* Infos */
 .res-row {
   font-size: 0.9rem;
   color: #111827;
@@ -578,18 +514,7 @@ body.day-view .planning-grid {
   font-weight: 700;
 }
 
-/* Couleurs */
-.status-pending {
-  background: #f59e0b;
-  color: white;
-}
-
-.status-approved {
-  background: #22c55e;
-  color: white;
-}
-
-.status-refused {
-  background: #ef4444;
-  color: white;
-}
+/* Couleurs statut */
+.status-pending  { background:#f59e0b; color:white; }
+.status-approved { background:#22c55e; color:white; }
+.status-refused  { background:#ef4444; color:white; }
