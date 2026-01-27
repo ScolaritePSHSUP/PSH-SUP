@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#b23a2c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PSH SUP – Admin">
+
+  <!-- manifest-admin -->
+  <link rel="manifest" href="/PSH-SUP-ADMIN/manifest-admin.json">
+
+  <title>PSH SUP – Administration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="/PSH-SUP-ADMIN/icons/apple-touch-icon.png">
+  <link rel="icon" sizes="192x192" href="/PSH-SUP-ADMIN/icons/icon-192.png">
+  <link rel="icon" sizes="512x512" href="/PSH-SUP-ADMIN/icons/icon-512.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<header class="header">
+  <h1>Admin – Contacts Administration</h1>
+  <p>Gestion de l’annuaire administratif</p>
+</header>
+
+<center>
+  <a href="admin.html" class="btn-secondary">
+    ⬅ Retour dashboard
+  </a>
+</center>
+
+<main class="admin-grid">
+
+  <!-- FORMULAIRE -->
+  <form id="contactForm" class="admin-form">
+
+    <label>Civilité</label>
+    <select id="civilite">
+      <option value="">—</option>
+      <option value="M.">M.</option>
+      <option value="Mme">Mme</option>
+    </select>
+
+    <label>Prénom</label>
+    <input type="text" id="prenom" required>
+
+    <label>Nom</label>
+    <input type="text" id="nom" required>
+
+    <label>Poste</label>
+    <input type="text" id="poste">
+
+    <label>Catégorie</label>
+    <select id="categorie" required>
+      <option value="">Choisir</option>
+      <option value="Direction">Direction</option>
+      <option value="Administration">Administration</option>
+      <option value="Scolarité">Scolarité</option>
+      <option value="Communication">Communication</option>
+      <option value="Carrière">Carrière</option>
+      <option value="Internationale">Internationale</option>
+      <option value="Pédagogie">Pédagogie</option>
+    </select>
+
+    <label>Email</label>
+    <input type="email" id="email">
+
+    <label>Téléphone</label>
+    <input type="text" id="telephone">
+
+    <label>Ordre d’affichage</label>
+    <input type="number" id="ordre" min="1">
+
+    <label class="checkbox-line">
+      <input type="checkbox" id="actif" checked>
+      Contact actif
+    </label>
+
+    <button type="submit" class="btn-primary">
+      👤 Ajouter le contact
+    </button>
+  </form>
+
+  <button id="cancelEdit" class="btn-secondary" style="display:none;">
+    ❌ Annuler modification
+  </button>
+
+<section class="admin-list">
+  <h2>Contacts enregistrés</h2>
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="🔍 Rechercher (nom, prénom, poste, catégorie...)"
+    class="admin-search"
+  >
+
+  <div id="adminContactsList"></div>
+</section>
+
+
+</main>
+
+<button id="logout" class="btn-logout-floating">🚪</button>
+
+<script>
+/* ===============================
+   🔐 SUPABASE CONFIG
+=============================== */
+const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  }
+);
+
+/* ===============================
+   🔒 PROTECTION ADMIN
+=============================== */
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session || data.session.user.user_metadata.role !== "admin") {
+    window.location.href = "admin-login.html";
+  }
+})();
+
+/* ===============================
+   🧠 ÉTAT GLOBAL
+=============================== */
+let editingContactId = null;
+let allContacts = [];
+
+/* ===============================
+   👤 SUBMIT CONTACT
+=============================== */
+document.getElementById("contactForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const contact = {
+    civilite: civilite.value || null,
+    prenom: prenom.value.trim(),
+    nom: nom.value.trim(),
+    poste: poste.value.trim() || null,
+    categorie: categorie.value,
+    email: email.value.trim() || null,
+    telephone: telephone.value.trim() || null,
+    ordre: ordre.value ? parseInt(ordre.value) : null,
+    actif: actif.checked
+  };
+
+  const query = editingContactId
+    ? supabaseClient
+        .from("contacts_administration")
+        .update(contact)
+        .eq("id", editingContactId)
+    : supabaseClient
+        .from("contacts_administration")
+        .insert(contact);
+
+  const { error } = await query;
+
+  if (error) {
+    console.error(error);
+    alert("Erreur lors de l’enregistrement");
+    return;
+  }
+
+  contactForm.reset();
+  editingContactId = null;
+  cancelEdit.style.display = "none";
+  document.querySelector(".btn-primary").textContent = "👤 Ajouter le contact";
+
+  loadAdminContacts();
+});
+
+/* ===============================
+   📋 LOAD CONTACTS
+=============================== */
+async function loadAdminContacts() {
+  const { data, error } = await supabaseClient
+    .from("contacts_administration")
+    .select("*")
+    .order("categorie")
+    .order("ordre");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  allContacts = data;
+  renderContacts(allContacts);
+}
+
+/* ===============================
+   🖥️ RENDER CONTACTS
+=============================== */
+function renderContacts(contacts) {
+  const container = document.getElementById("adminContactsList");
+  container.innerHTML = "";
+
+  if (contacts.length === 0) {
+    container.innerHTML = "<p>Aucun résultat</p>";
+    return;
+  }
+
+  contacts.forEach(c => {
+    container.innerHTML += `
+      <div class="admin-actu-card" data-id="${c.id}">
+        <h3>${c.prenom} ${c.nom}</h3>
+        <small>
+          ${c.poste || ""}<br>
+          ${c.categorie}
+        </small>
+        <div class="admin-actions">
+          <button onclick="editContact('${c.id}')">✏️</button>
+          <button onclick="deleteContact('${c.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* ===============================
+   🔍 SEARCH
+=============================== */
+document.getElementById("searchInput").addEventListener("input", e => {
+  const query = e.target.value.toLowerCase().trim();
+
+  const filtered = allContacts.filter(c =>
+    `${c.prenom} ${c.nom} ${c.poste || ""} ${c.categorie}`
+      .toLowerCase()
+      .includes(query)
+  );
+
+  renderContacts(filtered);
+});
+
+/* ===============================
+   ✏️ EDIT CONTACT
+=============================== */
+window.editContact = async (id) => {
+  const contact = allContacts.find(c => c.id === id);
+  if (!contact) return;
+
+  civilite.value = contact.civilite || "";
+  prenom.value = contact.prenom;
+  nom.value = contact.nom;
+  poste.value = contact.poste || "";
+  categorie.value = contact.categorie;
+  email.value = contact.email || "";
+  telephone.value = contact.telephone || "";
+  ordre.value = contact.ordre || "";
+  actif.checked = contact.actif;
+
+  editingContactId = id;
+  cancelEdit.style.display = "block";
+  document.querySelector(".btn-primary").textContent = "💾 Mettre à jour";
+};
+
+/* ===============================
+   🗑️ DELETE CONTACT
+=============================== */
+window.deleteContact = async (id) => {
+  if (!confirm("Supprimer ce contact ?")) return;
+
+  const { error } = await supabaseClient
+    .from("contacts_administration")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    alert("Erreur suppression");
+    return;
+  }
+
+  loadAdminContacts();
+};
+
+/* ===============================
+   ❌ CANCEL EDIT
+=============================== */
+cancelEdit.onclick = () => {
+  contactForm.reset();
+  editingContactId = null;
+  cancelEdit.style.display = "none";
+  document.querySelector(".btn-primary").textContent = "👤 Ajouter le contact";
+};
+
+/* ===============================
+   🚪 LOGOUT
+=============================== */
+logout.onclick = async () => {
+  await supabaseClient.auth.signOut();
+  window.location.href = "admin-login.html";
+};
+
+/* ===============================
+   🚀 INIT
+=============================== */
+loadAdminContacts();
+</script>
+
+</body>
+</html>
