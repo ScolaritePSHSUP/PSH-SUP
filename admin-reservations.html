@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>PSH SUP – Admin Réservations</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css?v=2">
+  <link rel="stylesheet" href="/PSH-SUP-ADMIN/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -133,7 +133,7 @@ function render(list) {
           👤 ${r.nom} (${r.classe})
         </p>
 
-        <span class="status-badge status-${status}" style="margin-top:0.4rem;">
+        <span class="status-badge status-${status}" style="margin-top:0.4rem; display:inline-block;">
           ${label}
         </span>
 
@@ -141,6 +141,7 @@ function render(list) {
     `;
   });
 }
+
 
 /* ===== FILTRES ===== */
 el("filterStatus").addEventListener("change", applyFilters);
