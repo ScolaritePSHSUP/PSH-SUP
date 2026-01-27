@@ -20,8 +20,8 @@
 </div>
 
 <main class="page">
-  <section class="card">
-    <h2>📋 Demandes de réservation</h2>
+  <section>
+    <h2 style="text-align:center;margin-bottom:1rem;">📋 Demandes de réservation</h2>
 
     <div class="filters-bar">
       <select id="filterStatus">
@@ -39,7 +39,8 @@
       <button id="filterReset" class="btn-secondary">Réinitialiser</button>
     </div>
 
-    <div id="reservationsList"></div>
+    <!-- ⚠️ GRID comme les salles -->
+    <div id="reservationsList" class="grid"></div>
   </section>
 </main>
 
@@ -102,7 +103,10 @@ function render(list) {
   c.innerHTML = "";
 
   if (!list.length) {
-    c.innerHTML = "<p>Aucune réservation</p>";
+    c.innerHTML = `
+      <p style="grid-column:1/-1;text-align:center;color:#6b7280;">
+        Aucune réservation
+      </p>`;
     return;
   }
 
@@ -115,24 +119,28 @@ function render(list) {
       "Refusée";
 
     c.innerHTML += `
-      <a href="admin-reservation.html?id=${r.id}" class="reservation-card">
+      <a href="admin-reservation.html?id=${r.id}" class="card">
 
-        <div class="res-header">
-          <span class="res-salle">Salle ${r.salle_numero}</span>
-          <span class="status-badge status-${status}">
-            ${label}
-          </span>
-        </div>
+        <span>🏫</span>
+        <h2>Salle ${r.salle_numero}</h2>
 
-        <div class="res-row">📅 ${r.jour}</div>
-        <div class="res-row">⏰ ${r.heure_debut} → ${r.heure_fin}</div>
-        <div class="res-row">👤 ${r.nom} (${r.classe})</div>
+        <p style="font-size:0.85rem;color:#6b7280;">
+          📅 ${r.jour}<br>
+          ⏰ ${r.heure_debut} → ${r.heure_fin}
+        </p>
+
+        <p style="margin-top:0.4rem;">
+          👤 ${r.nom} (${r.classe})
+        </p>
+
+        <span class="status-badge status-${status}" style="margin-top:0.4rem;">
+          ${label}
+        </span>
 
       </a>
     `;
   });
 }
-
 
 /* ===== FILTRES ===== */
 el("filterStatus").addEventListener("change", applyFilters);
