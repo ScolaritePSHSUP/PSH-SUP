@@ -157,7 +157,7 @@ document.getElementById("logout").addEventListener("click", async () => {
 =============================== */
 (async () => {
   if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/PSH-SUP-ADMIN/sw-v2.js");
+    await navigator.serviceWorker.register("/PSH-SUP-ADMIN/admin/sw-admin.js");
     console.log("✅ SW admin enregistré");
   }
 
