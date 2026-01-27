@@ -39,7 +39,7 @@
         <option value="all">Toutes les salles</option>
       </select>
 
-      <input type="date" id="filterDate" />
+      <input type="date" id="filterDate">
       <button id="filterReset" class="btn-secondary">Réinitialiser</button>
     </div>
 
@@ -56,7 +56,7 @@ const SUPABASE_URL = "https://wqjzgpxcudobdbhtatgw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_RQyY6vwKpcQdlRVFvDVD-A_YybqqTS_";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ================= AUTH ================= */
+/* ========== AUTH ========== */
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session || data.session.user.user_metadata.role !== "admin") {
