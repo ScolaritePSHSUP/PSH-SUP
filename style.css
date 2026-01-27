@@ -544,26 +544,19 @@ body.day-view .planning-grid {
   font-size: 0.7rem;
 }
 
-/* ✅ Les liens "carte" doivent être cliquables */
+/* ✅ Cartes cliquables partout */
 a.card,
 a.reservation-card {
   display: block;
   width: 100%;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 600px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.card {
-  display: block;
-}
-
-.card .status-badge {
-  display: inline-block;
-  margin-top: 0.5rem;
+/* ✅ Les enfants ne bloquent pas le clic */
+a.card *,
+a.reservation-card * {
+  pointer-events: auto;
 }
