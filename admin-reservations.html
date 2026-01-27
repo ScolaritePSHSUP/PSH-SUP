@@ -19,7 +19,6 @@
   <a href="admin.html" class="btn-secondary">⬅ Retour dashboard</a>
 </div>
 
-
 <center style="margin-top:1rem;">
   <button id="enablePush" class="btn-primary">🔔 Activer les notifications</button>
 </center>
@@ -135,19 +134,6 @@ function applyFilters() {
   render(list);
 }
 
-async function updateStatus(id, status) {
-  const { error } = await supabaseClient
-    .from("reservations_salles")
-    .update({ status })
-    .eq("id", id);
-
-  if (error) {
-    alert("Erreur Supabase : " + error.message);
-  } else {
-    loadReservations();
-  }
-}
-
 function render(list) {
   const c = el("reservationsList");
   c.innerHTML = "";
@@ -160,25 +146,22 @@ function render(list) {
   list.forEach(r => {
     const status = r.status || "pending";
 
-    const div = document.createElement("div");
-    div.className = "reservation-card";
-    div.style.cursor = "pointer";
+    const a = document.createElement("a");
+    a.href = "admin-reservation.html?id=" + r.id;
+    a.className = "reservation-card";
+    a.style.textDecoration = "none";
+    a.style.color = "inherit";
 
-    div.innerHTML = `
+    a.innerHTML = `
       <strong>Salle ${r.salle_numero}</strong>
       <p>📅 ${r.jour} ⏰ ${r.heure_debut} → ${r.heure_fin}</p>
       <p>👤 ${r.nom} (${r.classe})</p>
       <p>Status : <strong>${status}</strong></p>
     `;
 
-    div.addEventListener("click", () => {
-      window.location.href = "admin-reservation.html?id=" + r.id;
-    });
-
-    c.appendChild(div);
+    c.appendChild(a);
   });
 }
-
 
 /* ========== FILTRES ========== */
 el("filterStatus").addEventListener("change", applyFilters);
@@ -193,8 +176,6 @@ el("filterReset").addEventListener("click", () => {
 
 });
 </script>
-
-
 
 </body>
 </html>
