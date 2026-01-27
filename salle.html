@@ -105,6 +105,14 @@ for (let h = 8; h < 20; h++) {
   heures.push(String(h).padStart(2,"0")+":30");
 }
 
+/* ✅ DATE LOCALE (PAS UTC) */
+function toLocalISO(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function getMonday(d) {
   d = new Date(d);
   const day = d.getDay() || 7;
@@ -118,8 +126,8 @@ function getWeekRange(offset) {
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   return {
-    start: monday.toISOString().split("T")[0],
-    end: sunday.toISOString().split("T")[0],
+    start: toLocalISO(monday),
+    end: toLocalISO(sunday),
     monday
   };
 }
@@ -148,7 +156,7 @@ function renderPlanning(monday) {
       let classe="disponible";
       const cellDate = new Date(monday);
       cellDate.setDate(cellDate.getDate()+i);
-      const iso = cellDate.toISOString().split("T")[0];
+      const iso = toLocalISO(cellDate);
 
       lastContraintes.forEach(c=>{
         if(c.jour_semaine===j.id && h>=c.heure_debut.slice(0,5) && h<c.heure_fin.slice(0,5))
