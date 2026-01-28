@@ -241,14 +241,10 @@ loadEvents();
 /* ===============================
    📋 BOUTONS FLOTTANTS
 =============================== */
-document.getElementById("btnReservation").onclick = () =>
-  window.location.href = "reservations.html";
-
-document.getElementById("btnContact").onclick = () =>
-  window.location.href = "contacts.html";
-
-document.getElementById("btnBDE").onclick = () =>
-  window.location.href = "https://bde-psh-sup.netlify.app/";
+ 
+ document.getElementById("btnBDE").addEventListener("click", () => {
+  window.location.href = "https://bde-psh-sup.github.io/bdepshsup/public/index.html";
+});
 </script>
 
 
