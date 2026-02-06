@@ -97,14 +97,16 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 })();
 
-/* 📲 INSTALL */
+/* ===============================
+   📲 INSTALL PWA ADMIN
+=============================== */
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = "block";
+  installBtn.classList.remove("hidden");
 });
 
 installBtn.addEventListener("click", async () => {
@@ -112,8 +114,9 @@ installBtn.addEventListener("click", async () => {
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
   deferredPrompt = null;
-  installBtn.style.display = "none";
+  installBtn.classList.add("hidden");
 });
+
 
 /* 🚪 Logout */
 document.getElementById("logout").onclick = async () => {
