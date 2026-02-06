@@ -568,3 +568,7 @@ a.reservation-card * {
   line-height: 1.1;
   pointer-events: none;
 }
+.hidden {
+  display: none;
+}
+
