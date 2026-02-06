@@ -35,21 +35,48 @@
   <p>Tableau de bord de gestion</p>
 </header>
 
-<center>
-  <button id="installBtn" class="btn-primary install-btn" style="display:none;">
-    📲 Installer l’application
-  </button>
-</center>
 
-<main class="page">
-  <div class="grid">
-    <a href="admin-actus.html" class="card">📰 Actualités</a>
-    <a href="admin-evenements.html" class="card">📅 Événements</a>
-    <a href="admin-salles.html" class="card">🏫 Salles</a>
-    <a href="admin-reservations-V2.html" class="card">🗓️ Réservations</a>
-    <a href="admin-contact-admin.html" class="card">🏢 Administration</a>
-  </div>
+<main class="admin-dashboard">
+
+  <a href="admin-actus.html" class="admin-card">
+    <span class="icon">📰</span>
+    <h2>Actualités</h2>
+    <p>Créer et modifier les actualités</p>
+  </a>
+
+  <a href="admin-evenements.html" class="admin-card">
+    <span class="icon">📅</span>
+    <h2>Événements</h2>
+    <p>Gérer les événements</p>
+  </a>
+
+  <a href="admin-salles.html" class="admin-card">
+    <span class="icon">🏫</span>
+    <h2>Salles</h2>
+    <p>Gestion des salles</p>
+  </a>
+
+  <a href="admin-reservations-V2.html" class="admin-card">
+    <span class="icon">🗓️</span>
+    <h2>Réservations</h2>
+    <p>Suivi des réservations</p>
+  </a>
+
+  <a href="admin-contact-admin.html" class="admin-card">
+    <span class="icon">🏢</span>
+    <h2>Administration</h2>
+    <p>Paramètres et gestion interne</p>
+  </a>
+
+  <!-- 📲 Installer l’app -->
+  <button id="installBtn" class="admin-card hidden">
+    <span class="icon">📲</span>
+    <h2>Installer l’application</h2>
+    <p>Installer le dashboard sur l’appareil</p>
+  </button>
+
 </main>
+
 
 <footer class="footer">
   © PSH SUP – Administration – 2026
