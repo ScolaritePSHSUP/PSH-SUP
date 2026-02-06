@@ -489,3 +489,70 @@ body {
   color: white;
   cursor: pointer;
 }
+
+/* =========================
+   MOBILE OPTIMISATION
+========================= */
+
+@media (max-width: 480px) {
+
+  .page {
+    padding: 0.8rem;
+  }
+
+  /* ACTUS */
+
+  .actus-card {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .actus-card h2 {
+    font-size: 1rem;
+  }
+
+  .actus-content {
+    max-height: 70px;
+  }
+
+  .cta {
+    font-size: 0.85rem;
+  }
+
+  /* EVENTS */
+
+  .event-card {
+    border-radius: 14px;
+  }
+
+  .event-image {
+    height: 160px;
+  }
+
+  .event-body {
+    padding: 0.9rem;
+  }
+
+  .event-body h2 {
+    font-size: 1rem;
+  }
+
+  .event-meta {
+    font-size: 0.8rem;
+  }
+
+  /* Ombres plus légères mobile */
+  .actus-card,
+  .event-card {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  }
+
+  /* Badges plus compacts */
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+}
+
+
