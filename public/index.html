@@ -37,20 +37,6 @@
   <p>Vie du campus & services</p>
 </header>
 
-<button id="enablePushPublic" class="btn-secondary">
-  🔔 Activer les notifications
-</button>
-
-<center>
-  <button id="installBtn" class="btn-primary install-btn" style="display:none;">
-    📲 Installer l’application
-  </button>
-
-  <p id="iosInstallHint" class="ios-install-hint" style="display:none;">
-    📱 Sur iPhone :  
-    <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong>
-  </p>
-</center>
 
 <main class="page">
   <div class="grid">
@@ -74,6 +60,25 @@
       <span>🏢</span>
       <h2>Administration</h2>
     </a>
+
+    <!-- 🔔 Notifications -->
+<div class="notif-bar">
+  <button id="enablePushPublic" class="btn-notif">
+    🔔 Activer les notifications
+  </button>
+</div>
+
+<!-- 📲 Installer l’app -->
+<button id="installBtn" class="card hidden">
+  <span>📲</span>
+  <h2>Installer l’application</h2>
+</button>
+
+<!-- 🍏 iOS hint -->
+<p id="iosInstallHint" class="ios-install-hint hidden">
+  📱 Sur iPhone : Partager → Ajouter à l’écran d’accueil
+</p>
+
 
   </div>
 </main>
