@@ -554,5 +554,18 @@ body {
   }
 
 }
+/* =========================
+   BOUTON APP PUBLIQUE ADMIN
+========================= */
+
+.btn-public {
+  bottom: 140px; /* au-dessus du logout */
+  background: #2563eb;
+}
+
+.btn-public:hover {
+  background: #1d4ed8;
+}
+
 
 
