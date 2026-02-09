@@ -570,137 +570,19 @@ body {
 
 
 /* =========================
-   SALLES – PLANNING
+   SALLES – PLANNING FIX COMPLET
 ========================= */
-
-.planning-toolbar {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin: 1rem 0;
-}
 
 .planning-grid {
   display: grid;
-  grid-template-columns: 70px repeat(5, 1fr);
-  gap: 2px;
+  grid-template-columns: 80px repeat(5, 1fr);
+  gap: 1px;
   margin-top: 1rem;
-  background: var(--accent);
-  border-radius: 12px;
+  background: #d1d5db;
+  border-radius: 14px;
   overflow: hidden;
 }
 
-.planning-header {
-  background: #f3f4f6;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-align: center;
-  padding: 0.5rem;
-}
-
-.planning-hour {
-  background: #f9fafb;
-  font-size: 0.7rem;
-  text-align: center;
-  padding: 0.4rem;
-  color: #6b7280;
-}
-
-.planning-cell {
-  background: white;
-  min-height: 32px;
-  font-size: 0.65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 2px;
-}
-
-/* États */
-
-.planning-cell.disponible {
-  background: #ffffff;
-}
-
-.planning-cell.ferme {
-  background: #e5e7eb;
-}
-
-.planning-cell.pending {
-  background: #fef3c7;
-}
-
-.planning-cell.reserve {
-  background: #dcfce7;
-}
-
-/* =========================
-   LÉGENDE
-========================= */
-
-.planning-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.legend {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  margin-right: 4px;
-}
-
-.legend.disponible { background: white; border: 1px solid #ccc; }
-.legend.ferme { background: #e5e7eb; }
-.legend.pending { background: #fef3c7; }
-.legend.reserve { background: #dcfce7; }
-
-/* =========================
-   FORMULAIRE RÉSERVATION
-========================= */
-
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  margin-top: 1rem;
-}
-
-.contact-form input,
-.contact-form textarea {
-  padding: 0.6rem;
-  border-radius: 8px;
-  border: 1px solid var(--accent);
-  font-size: 0.9rem;
-}
-
-.contact-form textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.form-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.form-row input {
-  flex: 1;
-}
-
-/* =========================
-   RESPONSIVE PLANNING
-========================= */
-
-@media (max-width: 768px) {
-  .planning-grid {
-    grid-template-columns: 60px repeat(5, 100px);
-    overflow-x: auto;
-  }
-}
+/* En-têtes jours */
+.planning-header
 
