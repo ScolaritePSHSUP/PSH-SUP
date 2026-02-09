@@ -586,3 +586,127 @@ body {
 /* En-têtes jours */
 .planning-header
 
+.planning-header {
+  background: #f3f4f6;
+  padding: 0.6rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Colonne heures */
+.planning-hour {
+  background: #f9fafb;
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.5rem 0.3rem;
+  color: #6b7280;
+}
+
+/* Cases */
+.planning-cell {
+  background: white;
+  min-height: 34px;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  text-align: center;
+}
+
+/* États */
+.planning-cell.disponible {
+  background: #ffffff;
+}
+
+.planning-cell.ferme {
+  background: #e5e7eb;
+}
+
+.planning-cell.pending {
+  background: #fef3c7;
+}
+
+.planning-cell.reserve {
+  background: #dcfce7;
+}
+
+/* =========================
+   LÉGENDE
+========================= */
+
+.planning-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.legend {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-right: 5px;
+}
+
+.legend.disponible {
+  background: white;
+  border: 1px solid #ccc;
+}
+
+.legend.ferme {
+  background: #e5e7eb;
+}
+
+.legend.pending {
+  background: #fef3c7;
+}
+
+.legend.reserve {
+  background: #dcfce7;
+}
+
+/* =========================
+   FORMULAIRE RÉSERVATION
+========================= */
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  font-size: 0.9rem;
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-row input {
+  flex: 1;
+}
+
+/* Responsive planning */
+@media (max-width: 768px) {
+  .planning-grid {
+    grid-template-columns: 70px repeat(5, 120px);
+    overflow-x: auto;
+  }
+}
+
