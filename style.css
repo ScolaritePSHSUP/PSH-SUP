@@ -584,8 +584,6 @@ body {
 }
 
 /* En-têtes jours */
-.planning-header
-
 .planning-header {
   background: #f3f4f6;
   padding: 0.6rem;
@@ -709,4 +707,5 @@ body {
     overflow-x: auto;
   }
 }
+
 
