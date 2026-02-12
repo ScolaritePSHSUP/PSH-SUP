@@ -12,7 +12,7 @@
 
 <header class="header">
   <h1 id="salleTitle">Salle</h1>
-  <p id="salleSubtitle">Planning et réservation</p>
+  <p>Planning et réservation</p>
 </header>
 
 <main class="page">
@@ -84,7 +84,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // PARAM SALLE
 // ======================
 const params = new URLSearchParams(window.location.search);
-const salleNumero = params.get("numero"); // STRING
+const salleNumero = params.get("numero");
 if (!salleNumero) location.href = "salles.html";
 
 document.getElementById("salleTitle").textContent = "Salle " + salleNumero;
@@ -156,6 +156,7 @@ function renderPlanning(monday) {
 
   heures.forEach(h=>{
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
+
     jours.forEach((j,i)=>{
       let classe="disponible";
       let label = "";
@@ -164,56 +165,56 @@ function renderPlanning(monday) {
       cellDate.setDate(cellDate.getDate()+i);
       const iso = cellDate.toISOString().split("T")[0];
 
-     lastContraintes.forEach(c => {
+      // 🔒 CONTRAINTES
+      lastContraintes.forEach(c => {
 
-  const heureMatch =
-    h >= c.heure_debut.slice(0,5) &&
-    h <  c.heure_fin.slice(0,5);
+        const heureMatch =
+          h >= c.heure_debut.slice(0,5) &&
+          h <  c.heure_fin.slice(0,5);
 
-  if (!heureMatch) return;
+        if (!heureMatch) return;
 
-  const jourSemaine = c.jour_semaine ? Number(c.jour_semaine) : null;
+        const jourSemaine = c.jour_semaine ? Number(c.jour_semaine) : null;
 
-  const isHebdo =
-    jourSemaine === j.id &&
-    !c.jour_date &&
-    !c.date_debut;
+        const isHebdo =
+          jourSemaine === j.id &&
+          !c.jour_date &&
+          !c.date_debut;
 
-  const isDatePrecise =
-    c.jour_date === iso;
+        const isDatePrecise =
+          c.jour_date === iso;
 
-  const isPeriode =
-    c.date_debut &&
-    c.date_fin &&
-    iso >= c.date_debut &&
-    iso <= c.date_fin &&
-    (
-      jourSemaine === j.id ||
-      jourSemaine === null
-    );
+        const isPeriode =
+          c.date_debut &&
+          c.date_fin &&
+          iso >= c.date_debut &&
+          iso <= c.date_fin &&
+          (
+            jourSemaine === j.id ||
+            jourSemaine === null
+          );
 
-  if (isDatePrecise || isPeriode || isHebdo) {
-    classe = "ferme";
-  }
+        if (isHebdo || isDatePrecise || isPeriode) {
+          classe = "ferme";
+        }
 
-});
+      });
 
-
+      // 📅 RÉSERVATIONS
       lastReservations.forEach(r => {
 
-  if (classe === "ferme") return; // 🔥 on n’écrase jamais une fermeture
+        if (classe === "ferme") return;
 
-  if (
-    r.jour === iso &&
-    h >= r.heure_debut.slice(0,5) &&
-    h <  r.heure_fin.slice(0,5)
-  ) {
-    classe = r.status === "approved" ? "reserve" : "pending";
-    label = r.nom;
-  }
+        if (
+          r.jour === iso &&
+          h >= r.heure_debut.slice(0,5) &&
+          h <  r.heure_fin.slice(0,5)
+        ) {
+          classe = r.status === "approved" ? "reserve" : "pending";
+          label = r.nom;
+        }
 
-});
-
+      });
 
       grid.innerHTML += `
         <div class="planning-cell ${classe}">
@@ -226,28 +227,20 @@ function renderPlanning(monday) {
 
 // ======================
 async function loadPlanningVisuel() {
+
   const { start, end, monday } = getWeekRange(weekOffset);
 
-  // 🔒 Contraintes optimisées
-  const { data: contraintes, error: errContraintes } = await supabaseClient
+  const { data: contraintes } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
-    .eq("salle_numero", salleNumero)
-    .or(`
-      jour_date.is.null,
-      and(date_debut.lte.${end},date_fin.gte.${start})
-    `);
+    .eq("salle_numero", salleNumero);
 
-  // 📅 Réservations
-  const { data: reservations, error: errReservations } = await supabaseClient
+  const { data: reservations } = await supabaseClient
     .from("reservations_salles_public")
     .select("*")
     .eq("salle_numero", salleNumero)
     .gte("jour", start)
     .lte("jour", end);
-
-  if (errContraintes) console.error("❌ ERREUR CONTRAINTES:", errContraintes);
-  if (errReservations) console.error("❌ ERREUR RESERVATIONS:", errReservations);
 
   lastContraintes = contraintes || [];
   lastReservations = reservations || [];
@@ -255,8 +248,23 @@ async function loadPlanningVisuel() {
   renderPlanning(monday);
 }
 
+// Navigation semaine
+document.getElementById("nextWeek").onclick = () => {
+  weekOffset++;
+  loadPlanningVisuel();
+};
+
+document.getElementById("prevWeek").onclick = () => {
+  weekOffset--;
+  loadPlanningVisuel();
+};
+
+loadSalleInfos();
+loadPlanningVisuel();
+
 // ======================
 const form = document.getElementById("reservationForm");
+
 form.addEventListener("submit", async function(e){
   e.preventDefault();
 
@@ -283,7 +291,6 @@ form.addEventListener("submit", async function(e){
   }]);
 
   if(error){
-    console.error(error);
     msg.textContent = "❌ Erreur lors de l’envoi";
     msg.style.color = "red";
     return;
