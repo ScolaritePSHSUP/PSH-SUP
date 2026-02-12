@@ -226,35 +226,34 @@ function renderPlanning(monday) {
 
 // ======================
 async function loadPlanningVisuel() {
-  const { start,end,monday } = getWeekRange(weekOffset);
+  const { start, end, monday } = getWeekRange(weekOffset);
 
-  const { data: contraintes } = await supabaseClient
+  // 🔒 Contraintes optimisées
+  const { data: contraintes, error: errContraintes } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
-    .eq("salle_numero", salleNumero);
+    .eq("salle_numero", salleNumero)
+    .or(`
+      jour_date.is.null,
+      and(date_debut.lte.${end},date_fin.gte.${start})
+    `);
 
-  const { data: contraintes } = await supabaseClient
-  .from("salles_contraintes")
-  .select("*")
-  .eq("salle_numero", salleNumero)
-  .or(`
-    jour_date.is.null,
-    and(date_debut.lte.${end},date_fin.gte.${start})
-  `);
+  // 📅 Réservations
+  const { data: reservations, error: errReservations } = await supabaseClient
+    .from("reservations_salles_public")
+    .select("*")
+    .eq("salle_numero", salleNumero)
+    .gte("jour", start)
+    .lte("jour", end);
 
-
-  if (error) console.error("❌ ERREUR RESERVATIONS:", error);
+  if (errContraintes) console.error("❌ ERREUR CONTRAINTES:", errContraintes);
+  if (errReservations) console.error("❌ ERREUR RESERVATIONS:", errReservations);
 
   lastContraintes = contraintes || [];
   lastReservations = reservations || [];
+
   renderPlanning(monday);
 }
-
-document.getElementById("nextWeek").onclick=()=>{weekOffset++;loadPlanningVisuel();};
-document.getElementById("prevWeek").onclick=()=>{weekOffset--;loadPlanningVisuel();};
-
-loadSalleInfos();
-loadPlanningVisuel();
 
 // ======================
 const form = document.getElementById("reservationForm");
