@@ -287,15 +287,13 @@ async function loadPlanningVisuel() {
 
   const { start, end, monday } = getWeekRange(weekOffset);
 
+  // 🔒 On récupère TOUTES les contraintes de la salle
   const { data: contraintes, error: errC } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
-    .eq("salle_numero", salleNumero)
-    .or(`
-      jour_date.is.null,
-      and(date_debut.lte.${end},date_fin.gte.${start})
-    `);
+    .eq("salle_numero", salleNumero);
 
+  // 📅 Réservations limitées à la semaine affichée
   const { data: reservations, error: errR } = await supabaseClient
     .from("reservations_salles_public")
     .select("*")
@@ -311,6 +309,7 @@ async function loadPlanningVisuel() {
 
   renderPlanning(monday);
 }
+
 
 // ======================
 // NAVIGATION
