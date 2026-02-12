@@ -164,11 +164,38 @@ function renderPlanning(monday) {
       cellDate.setDate(cellDate.getDate()+i);
       const iso = cellDate.toISOString().split("T")[0];
 
-      lastContraintes.forEach(c=>{
-        if(c.jour_semaine === j.id && h>=c.heure_debut.slice(0,5) && h<c.heure_fin.slice(0,5)) {
-          classe="ferme";
-        }
-      });
+     lastContraintes.forEach(c => {
+
+  const heureMatch =
+    h >= c.heure_debut.slice(0,5) &&
+    h <  c.heure_fin.slice(0,5);
+
+  if (!heureMatch) return;
+
+  const isHebdo =
+    c.jour_semaine === j.id &&
+    !c.jour_date &&
+    !c.date_debut;
+
+  const isDatePrecise =
+    c.jour_date === iso;
+
+  const isPeriode =
+    c.date_debut &&
+    c.date_fin &&
+    iso >= c.date_debut &&
+    iso <= c.date_fin &&
+    (
+      c.jour_semaine === j.id ||
+      c.jour_semaine === null
+    );
+
+  if (isDatePrecise || isPeriode || isHebdo) {
+    classe = "ferme";
+  }
+
+});
+
 
       lastReservations.forEach(r=>{
         if(r.jour === iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5)) {
