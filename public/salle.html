@@ -109,6 +109,8 @@ for (let h = 8; h < 20; h++) {
 }
 
 // ======================
+// DATE UTILS
+// ======================
 function getMonday(d) {
   d = new Date(d);
   const day = d.getDay() || 7;
@@ -121,6 +123,7 @@ function getWeekRange(offset) {
   monday.setDate(monday.getDate() + offset * 7);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
+
   return {
     start: monday.toISOString().split("T")[0],
     end: sunday.toISOString().split("T")[0],
@@ -128,6 +131,8 @@ function getWeekRange(offset) {
   };
 }
 
+// ======================
+// CHARGEMENT INFOS SALLE
 // ======================
 async function loadSalleInfos() {
   const { data } = await supabaseClient
@@ -144,44 +149,100 @@ async function loadSalleInfos() {
 }
 
 // ======================
+// VÉRIFICATIONS
+// ======================
+function isCreneauFerme(jour, heureDebut, heureFin) {
+
+  const dateObj = new Date(jour);
+  const jourSemaine = (dateObj.getDay() || 7);
+
+  return lastContraintes.some(c => {
+
+    const overlap =
+      heureDebut < c.heure_fin &&
+      heureFin > c.heure_debut;
+
+    if (!overlap) return false;
+
+    const js = c.jour_semaine ? Number(c.jour_semaine) : null;
+
+    const isHebdo =
+      js === jourSemaine &&
+      !c.jour_date &&
+      !c.date_debut;
+
+    const isDate =
+      c.jour_date === jour;
+
+    const isPeriode =
+      c.date_debut &&
+      c.date_fin &&
+      jour >= c.date_debut &&
+      jour <= c.date_fin &&
+      (js === jourSemaine || js === null);
+
+    return isHebdo || isDate || isPeriode;
+  });
+}
+
+function isChevauchement(jour, heureDebut, heureFin) {
+  return lastReservations.some(r => {
+
+    if (r.jour !== jour) return false;
+
+    return (
+      heureDebut < r.heure_fin &&
+      heureFin > r.heure_debut
+    );
+  });
+}
+
+// ======================
+// RENDER PLANNING
+// ======================
 function renderPlanning(monday) {
+
   const grid = document.getElementById("planningGrid");
   grid.innerHTML = "<div></div>";
 
   jours.forEach((j,i)=>{
     const d = new Date(monday);
     d.setDate(d.getDate()+i);
-    grid.innerHTML += `<div class="planning-header">${j.label}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
+    grid.innerHTML +=
+      `<div class="planning-header">
+        ${j.label}<br>${d.getDate()}/${d.getMonth()+1}
+      </div>`;
   });
 
   heures.forEach(h=>{
     grid.innerHTML += `<div class="planning-hour">${h}</div>`;
 
     jours.forEach((j,i)=>{
+
       let classe="disponible";
-      let label = "";
+      let label="";
 
       const cellDate = new Date(monday);
       cellDate.setDate(cellDate.getDate()+i);
       const iso = cellDate.toISOString().split("T")[0];
 
-      // 🔒 CONTRAINTES
+      // CONTRAINTES
       lastContraintes.forEach(c => {
 
-        const heureMatch =
+        const overlap =
           h >= c.heure_debut.slice(0,5) &&
           h <  c.heure_fin.slice(0,5);
 
-        if (!heureMatch) return;
+        if (!overlap) return;
 
-        const jourSemaine = c.jour_semaine ? Number(c.jour_semaine) : null;
+        const js = c.jour_semaine ? Number(c.jour_semaine) : null;
 
         const isHebdo =
-          jourSemaine === j.id &&
+          js === j.id &&
           !c.jour_date &&
           !c.date_debut;
 
-        const isDatePrecise =
+        const isDate =
           c.jour_date === iso;
 
         const isPeriode =
@@ -189,18 +250,14 @@ function renderPlanning(monday) {
           c.date_fin &&
           iso >= c.date_debut &&
           iso <= c.date_fin &&
-          (
-            jourSemaine === j.id ||
-            jourSemaine === null
-          );
+          (js === j.id || js === null);
 
-        if (isHebdo || isDatePrecise || isPeriode) {
+        if (isHebdo || isDate || isPeriode) {
           classe = "ferme";
         }
-
       });
 
-      // 📅 RÉSERVATIONS
+      // RÉSERVATIONS
       lastReservations.forEach(r => {
 
         if (classe === "ferme") return;
@@ -213,34 +270,41 @@ function renderPlanning(monday) {
           classe = r.status === "approved" ? "reserve" : "pending";
           label = r.nom;
         }
-
       });
 
-      grid.innerHTML += `
-        <div class="planning-cell ${classe}">
+      grid.innerHTML +=
+        `<div class="planning-cell ${classe}">
           ${label ? `<small>${label}</small>` : ""}
-        </div>
-      `;
+        </div>`;
     });
   });
 }
 
 // ======================
+// CHARGEMENT VISUEL
+// ======================
 async function loadPlanningVisuel() {
 
   const { start, end, monday } = getWeekRange(weekOffset);
 
-  const { data: contraintes } = await supabaseClient
+  const { data: contraintes, error: errC } = await supabaseClient
     .from("salles_contraintes")
     .select("*")
-    .eq("salle_numero", salleNumero);
+    .eq("salle_numero", salleNumero)
+    .or(`
+      jour_date.is.null,
+      and(date_debut.lte.${end},date_fin.gte.${start})
+    `);
 
-  const { data: reservations } = await supabaseClient
+  const { data: reservations, error: errR } = await supabaseClient
     .from("reservations_salles_public")
     .select("*")
     .eq("salle_numero", salleNumero)
     .gte("jour", start)
     .lte("jour", end);
+
+  if (errC) console.error("Erreur contraintes", errC);
+  if (errR) console.error("Erreur reservations", errR);
 
   lastContraintes = contraintes || [];
   lastReservations = reservations || [];
@@ -248,7 +312,9 @@ async function loadPlanningVisuel() {
   renderPlanning(monday);
 }
 
-// Navigation semaine
+// ======================
+// NAVIGATION
+// ======================
 document.getElementById("nextWeek").onclick = () => {
   weekOffset++;
   loadPlanningVisuel();
@@ -259,15 +325,14 @@ document.getElementById("prevWeek").onclick = () => {
   loadPlanningVisuel();
 };
 
-loadSalleInfos();
-loadPlanningVisuel();
-
+// ======================
+// RÉSERVATION
 // ======================
 const form = document.getElementById("reservationForm");
 
 form.addEventListener("submit", async function(e){
-  e.preventDefault();
 
+  e.preventDefault();
   const msg = document.getElementById("reservationMessage");
 
   const nom = document.getElementById("nom").value.trim();
@@ -278,19 +343,40 @@ form.addEventListener("submit", async function(e){
   const email = document.getElementById("email").value.trim();
   const motif = document.getElementById("motif").value.trim();
 
-  const { error } = await supabaseClient.from("reservations_salles").insert([{
-    salle_numero: salleNumero,
-    nom,
-    classe,
-    jour,
-    heure_debut,
-    heure_fin,
-    email,
-    motif,
-    status: "pending"
-  }]);
+  if (heure_fin <= heure_debut) {
+    msg.textContent = "❌ Heure de fin invalide";
+    msg.style.color = "red";
+    return;
+  }
 
-  if(error){
+  if (isCreneauFerme(jour, heure_debut, heure_fin)) {
+    msg.textContent = "❌ Salle fermée sur ce créneau";
+    msg.style.color = "red";
+    return;
+  }
+
+  if (isChevauchement(jour, heure_debut, heure_fin)) {
+    msg.textContent = "❌ Créneau déjà réservé";
+    msg.style.color = "red";
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("reservations_salles")
+    .insert([{
+      salle_numero: salleNumero,
+      nom,
+      classe,
+      jour,
+      heure_debut,
+      heure_fin,
+      email,
+      motif,
+      status: "pending"
+    }]);
+
+  if (error) {
+    console.error(error);
     msg.textContent = "❌ Erreur lors de l’envoi";
     msg.style.color = "red";
     return;
@@ -298,10 +384,16 @@ form.addEventListener("submit", async function(e){
 
   msg.textContent = "✅ Demande envoyée";
   msg.style.color = "green";
+
   form.reset();
   loadPlanningVisuel();
 });
+
+// ======================
+loadSalleInfos();
+loadPlanningVisuel();
 </script>
+
 
 </body>
 </html>
