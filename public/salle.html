@@ -172,8 +172,10 @@ function renderPlanning(monday) {
 
   if (!heureMatch) return;
 
+  const jourSemaine = c.jour_semaine ? Number(c.jour_semaine) : null;
+
   const isHebdo =
-    c.jour_semaine === j.id &&
+    jourSemaine === j.id &&
     !c.jour_date &&
     !c.date_debut;
 
@@ -186,8 +188,8 @@ function renderPlanning(monday) {
     iso >= c.date_debut &&
     iso <= c.date_fin &&
     (
-      c.jour_semaine === j.id ||
-      c.jour_semaine === null
+      jourSemaine === j.id ||
+      jourSemaine === null
     );
 
   if (isDatePrecise || isPeriode || isHebdo) {
