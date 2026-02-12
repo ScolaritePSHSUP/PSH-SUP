@@ -199,12 +199,21 @@ function renderPlanning(monday) {
 });
 
 
-      lastReservations.forEach(r=>{
-        if(r.jour === iso && h>=r.heure_debut.slice(0,5) && h<r.heure_fin.slice(0,5)) {
-          classe = r.status === "approved" ? "reserve" : "pending";
-          label = r.nom;
-        }
-      });
+      lastReservations.forEach(r => {
+
+  if (classe === "ferme") return; // 🔥 on n’écrase jamais une fermeture
+
+  if (
+    r.jour === iso &&
+    h >= r.heure_debut.slice(0,5) &&
+    h <  r.heure_fin.slice(0,5)
+  ) {
+    classe = r.status === "approved" ? "reserve" : "pending";
+    label = r.nom;
+  }
+
+});
+
 
       grid.innerHTML += `
         <div class="planning-cell ${classe}">
