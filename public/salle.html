@@ -233,12 +233,15 @@ async function loadPlanningVisuel() {
     .select("*")
     .eq("salle_numero", salleNumero);
 
-  const { data: reservations, error } = await supabaseClient
-    .from("reservations_salles_public") // 👈 VIEW PUBLIQUE
-    .select("*")
-    .eq("salle_numero", salleNumero)
-    .gte("jour", start)
-    .lte("jour", end);
+  const { data: contraintes } = await supabaseClient
+  .from("salles_contraintes")
+  .select("*")
+  .eq("salle_numero", salleNumero)
+  .or(`
+    jour_date.is.null,
+    and(date_debut.lte.${end},date_fin.gte.${start})
+  `);
+
 
   if (error) console.error("❌ ERREUR RESERVATIONS:", error);
 
