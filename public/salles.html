@@ -136,9 +136,13 @@ async function loadSalles() {
    📋 BOUTONS FLOTTANTS
 =============================== */
  
- document.getElementById("btnBDE").addEventListener("click", () => {
-  window.location.href = "https://bde-psh-sup.github.io/bdepshsup/public/index.html";
-});
+const btnBDE = document.getElementById("btnBDE");
+if (btnBDE) {
+  btnBDE.addEventListener("click", () => {
+    window.location.href = "https://bde-psh-sup.github.io/bdepshsup/public/index.html";
+  });
+}
+
 
 /* ===============================
    🚀 INIT
