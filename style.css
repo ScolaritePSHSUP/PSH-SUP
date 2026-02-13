@@ -570,17 +570,22 @@ body {
 
 
 /* =========================
-   SALLES – PLANNING FIX COMPLET
+   SALLES – PLANNING FULL DESKTOP
 ========================= */
 
 .planning-grid {
   display: grid;
-  grid-template-columns: 80px repeat(5, 140px);
+  grid-template-columns: 90px repeat(5, minmax(150px, 1fr));
   gap: 1px;
   margin-top: 1rem;
   background: #d1d5db;
   border-radius: 14px;
-  overflow-x: auto;
+  width: 100%;
+}
+
+/* Les cartes prennent toute la largeur */
+.card {
+  width: 100%;
 }
 
 
@@ -708,6 +713,5 @@ body {
     overflow-x: auto;
   }
 }
-
 
 
